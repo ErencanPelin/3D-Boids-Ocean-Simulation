@@ -52,6 +52,7 @@
   <script type="module">
     import * as THREE from 'three';
     import { Boid } from './build/boid.js';
+    import { BoidSettings } from './build/boid.js';
     import { OrbitControls } from './build/controls/OrbitControls.js';
     import * as dat from 'dat.gui';
 
@@ -60,7 +61,7 @@
     var ratio = window.innerWidth / window.innerHeight;
 
     var camera = new THREE.PerspectiveCamera(45, ratio, 0.1, 1000);
-    camera.position.set(0, 0, 15);
+    camera.position.set(0, 0, 500);
     camera.lookAt(0, 0, 1);
 
     var renderer = new THREE.WebGLRenderer();
@@ -68,27 +69,20 @@
     document.body.appendChild(renderer.domElement);
 
     //#region GUI
-    var Boids = {
-      cohesion: 0.5,
-      separation: 0.5,
-      alignment: 0.5,
-      moveSpeed: 5,
-      worldSize: 200,
-    };
 
     //GUI
     const gui = new dat.GUI();
     const settingsFolder = gui.addFolder('Boid Settings');
-    settingsFolder.add(Boids, 'moveSpeed', 0, 20);
-    settingsFolder.add(Boids, 'cohesion', 0, 1);
-    settingsFolder.add(Boids, 'separation', 0, 1);
-    settingsFolder.add(Boids, 'alignment', 0, 1);
-    settingsFolder.add(Boids, 'worldSize', 10, 50);
+    //settingsFolder.add(BoidSettings, 'moveSpeed', 0, 20);
+    settingsFolder.add(BoidSettings, 'cohesion', 0, 1);
+    settingsFolder.add(BoidSettings, 'separation', 0, 1);
+    settingsFolder.add(BoidSettings, 'alignment', 0, 1);
+    settingsFolder.add(BoidSettings, 'worldSize', 10, 50);
     settingsFolder.open();
     //#endregion
 
     //create bounds Geometry and add to scene
-    const boundsGeometry = new THREE.BoxGeometry(Boids.worldSize, Boids.worldSize, Boids.worldSize);
+    const boundsGeometry = new THREE.BoxGeometry(BoidSettings.worldSize, BoidSettings.worldSize, BoidSettings.worldSize);
     var boxMat = new THREE.MeshBasicMaterial();
     boxMat.color = new THREE.Color(0, 0.8, 1);
     boxMat.wireframe = true;
@@ -97,8 +91,8 @@
     scene.add(boxMesh);
 
     var allBoids = [];
-    for (var i = 0; i < 100; i++){
-      var boid = new Boid(Boids.worldSize);
+    for (var i = 0; i < 200; i++){
+      var boid = new Boid();
       boid.createBoid(scene);
       allBoids.push(boid);
     }
@@ -116,6 +110,11 @@
       controls.update();
 
       /*do update stuff*/
+      for (i = 0; i < allBoids.length; i++){
+        allBoids[i].edgeAvoid();
+        allBoids[i].flock(allBoids);
+        allBoids[i].update();
+      }
 
       requestAnimationFrame(Update);
     };
