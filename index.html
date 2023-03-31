@@ -1,7 +1,7 @@
 <html>
 
 <head>
-  <title>Procedural Gen Erencan</title>
+  <title>3D Boids Project</title>
 </head>
 
 <style>
@@ -37,7 +37,7 @@
   </style>
 
   <div id="info">
-    <p>Autumn 2023 - Intro to CG - Erencan 14268902</p>
+    <p>Autumn 2023 - Intro to CG - 3D Boids</p>
   </div>
 
   <script type="importmap">
@@ -50,7 +50,6 @@
 		</script>
 
   <script type="module">
-
     import * as THREE from 'three';
     import { OrbitControls } from './build/controls/OrbitControls.js';
     import * as dat from 'dat.gui';
@@ -58,211 +57,59 @@
     //create the scene
     var scene = new THREE.Scene();
     var ratio = window.innerWidth / window.innerHeight;
-    //create the perspective camera
-    //for parameters see https://threejs.org/docs/#api/cameras/PerspectiveCamera
-    var camera = new THREE.PerspectiveCamera(45, ratio, 0.1, 1000);
 
-    //set the camera position
+    var camera = new THREE.PerspectiveCamera(45, ratio, 0.1, 1000);
     camera.position.set(0, 0, 15);
-    // and the direction
     camera.lookAt(0, 0, 1);
 
-    //create the webgl renderer
     var renderer = new THREE.WebGLRenderer();
-
-    //set the size of the rendering window
     renderer.setSize(window.innerWidth, window.innerHeight);
-
-    //add the renderer to the current document
     document.body.appendChild(renderer.domElement);
 
-    var Settings = {
-      wireFrameMode: false,
-      timeSpeed: 0.1,
-      amplitude: 1.0,
-      rippleDropoff: 10,
-      epicentreX: 50.0,
-      epicentreZ: 50.0,
+    //#region GUI
+    var Boids = {
+      cohesion: 0.5,
+      separation: 0.5,
+      alignment: 0.5,
+      moveSpeed: 5,
+      worldSize: 30,
     };
-    var Boat = {
-      length: 3,
-      rotationY: 0.0,
-      positionX: 0.0,
-      positionZ: 15.0,
-    };
-
-    var time = 0;
-    var worldSize = 100;
 
     //GUI
     const gui = new dat.GUI();
-    const settingsFolder = gui.addFolder('Settings');
-    settingsFolder.add(Settings, 'wireFrameMode');
-    settingsFolder.add(Settings, 'timeSpeed', 0, 1);
-    settingsFolder.add(Settings, 'amplitude', 0, 5);
-    settingsFolder.add(Settings, 'rippleDropoff', 5, 50);
+    const settingsFolder = gui.addFolder('Boid Settings');
+    settingsFolder.add(Boids, 'moveSpeed', 0, 20);
+    settingsFolder.add(Boids, 'cohesion', 0, 1);
+    settingsFolder.add(Boids, 'separation', 0, 1);
+    settingsFolder.add(Boids, 'alignment', 0, 1);
+    settingsFolder.add(Boids, 'worldSize', 10, 50);
     settingsFolder.open();
-    const boatFolder = gui.addFolder('Boat');
-    boatFolder.add(Boat, 'length', 2, 6);
-    boatFolder.add(Boat, 'rotationY', 0, 180);
-    boatFolder.add(Boat, 'positionZ', 0, worldSize / 2);
-    boatFolder.open();
+    //#endregion
 
-    var distance = function (x, y, x1, y1) {
-      return (1 - (Math.sqrt(Math.pow(x1 - x, 2) + Math.pow(y1 - y, 2)) / (worldSize * 1.5)));
-    }
+    //create bounds Geometry and add to scene
+    const boundsGeometry = new THREE.BoxGeometry(40, 40, 40);
+    var boxMat = new THREE.MeshBasicMaterial();
+    boxMat.color = new THREE.Color(0, 0.8, 1);
+    boxMat.wireframe = true;
+    const boxMesh = new THREE.Mesh(boundsGeometry, boxMat);
+    boxMesh.position.set(0, 0, 0);
+    scene.add(boxMesh);
 
-    const raycaster = new THREE.Raycaster();
-    var UpdateBoat = function () {
-      //store boats relative position for calculations
-      var x = (Boat.positionX) + worldSize * 0.5;
-      var z = (Boat.positionZ) + worldSize * 0.5;
-/*
-      //calculate the boat's height position points
-      var vamp = Settings.amplitude * Math.pow(distance(x, z, Settings.epicentreX, Settings.epicentreZ), Settings.rippleDropoff);
-      var vtime = Math.sin(time);// * Math.PI;
-
-      //midpoint between front of the boat and back of the boat:
-      var my = vamp * Math.sin(-time + Math.sqrt(Math.pow(x + -Settings.epicentreX, 2) + Math.pow(z + -Settings.epicentreZ, 2)));
-*/
-      //calculate the rotation of the boat based on the front and back height samplers
-      raycaster.set(new THREE.Vector3(Boat.positionX, 1, Boat.positionZ), new THREE.Vector3(0, -1, 0));
-      const intersects = raycaster.intersectObject(waterMesh);
-
-      boatMesh.position.set(
-        Boat.positionX,
-        0.5,
-        Boat.positionZ);
-      boatMesh.scale.set(1, 1, Boat.length);
-
-      if (intersects.length > 0) {
-        boatMesh.rotation.x = intersects[0].face.normal.z;
-        boatMesh.rotation.z = intersects[0].face.normal.x;
-        boatMesh.position.y = intersects[0].point.y + 0.5;
-      }
-      boatMesh.rotation.y = (Boat.rotationY / 360) * Math.PI * 2; //degs to rads
-    }
-    /*
-        var ReDrawMesh = function () {
-          var vIndex = 0;
-          for (var z = 0; z < worldSize; z++) {
-            for (var x = 0; x < worldSize; x++) {
-              var vamp = Settings.amplitude * Math.pow(distance(x, z, Settings.epicentreX, Settings.epicentreZ), Settings.rippleDropoff);
-    
-              //sin(sqrt(x2+y2))
-              var vtime = Math.sin(time);// * Math.PI;
-              var xy = vamp * Math.sin(-time + Math.sqrt(Math.pow(x + -Settings.epicentreX, 2) + Math.pow(z + -Settings.epicentreZ, 2)));
-              var xy1 = vamp * Math.sin(-time + Math.sqrt(Math.pow(x + 1 + -Settings.epicentreX, 2) + Math.pow(z + -Settings.epicentreZ, 2)));
-              var zy1 = vamp * Math.sin(-time + Math.sqrt(Math.pow(x + -Settings.epicentreX, 2) + Math.pow(z + 1 + -Settings.epicentreZ, 2)));
-              var xzy1 = vamp * Math.sin(-time + Math.sqrt(Math.pow(x + 1 + -Settings.epicentreX, 2) + Math.pow(z + 1 + -Settings.epicentreZ, 2)));
-    
-              //tri 1
-              waterVerts[vIndex] = 0 + x;
-              waterVerts[1 + vIndex] = xy;
-              waterVerts[2 + vIndex] = 0 + z;
-    
-              waterVerts[3 + vIndex] = 0 + x;
-              waterVerts[4 + vIndex] = zy1;
-              waterVerts[5 + vIndex] = 1.0 + z;
-    
-              waterVerts[6 + vIndex] = 1.0 + x;
-              waterVerts[7 + vIndex] = xy1;
-              waterVerts[8 + vIndex] = 0 + z;
-    
-              //tri 2
-              waterVerts[9 + vIndex] = 0 + x;
-              waterVerts[10 + vIndex] = zy1;
-              waterVerts[11 + vIndex] = 1.0 + z;
-    
-              waterVerts[12 + vIndex] = 1.0 + x;
-              waterVerts[13 + vIndex] = xzy1;
-              waterVerts[14 + vIndex] = 1.0 + z;
-    
-              waterVerts[15 + vIndex] = 1.0 + x;
-              waterVerts[16 + vIndex] = xy1;
-              waterVerts[17 + vIndex] = 0 + z;
-    
-              vIndex += 18;
-            }
-          }
-    
-          // itemSize = 3 because there are 3 values per vertex
-          waterGeometry.setAttribute('position', new THREE.BufferAttribute(waterVerts, 3));
-          waterGeometry.computeVertexNormals();
-        }
-    */
-
-    var ReDrawMesh = function () {
-      waterVerts = [];
-      waterIndexes = [];
-      for (let i = 0; i <= worldSize; i++) {
-        const y = i - worldSize * 1;
-        for (let j = 0; j <= worldSize; j++) {
-          const x = j;
-          var vamp = Settings.amplitude * Math.pow(distance(x, -y, Settings.epicentreX, Settings.epicentreZ), Settings.rippleDropoff);
-          var vtime = Math.sin(time);// * Math.PI;
-          var xy = vamp * Math.sin(-time + Math.sqrt(Math.pow(x + -Settings.epicentreX, 2) + Math.pow(-y + -Settings.epicentreZ, 2)));
-          waterVerts.push(-y, xy, x);
-        }
-      }
-
-      for (let i = 0; i < worldSize; i++) {
-        for (let j = 0; j < worldSize; j++) {
-          const a = i * (worldSize + 1) + (j + 1);
-          const b = i * (worldSize + 1) + j;
-          const c = (i + 1) * (worldSize + 1) + j;
-          const d = (i + 1) * (worldSize + 1) + (j + 1);
-
-          waterIndexes.push(a, b, d); // face one
-          waterIndexes.push(b, c, d); // face two
-        }
-      }
-
-      waterGeometry.setIndex(waterIndexes);
-      waterGeometry.setAttribute('position', new THREE.Float32BufferAttribute(waterVerts, 3));
-      waterGeometry.computeVertexNormals();
-    }
-
-    //create geometry
-    const waterGeometry = new THREE.BufferGeometry();
-    var waterVerts = [];
-    var waterIndexes = [];
-    //  const waterVerts = new Float32Array(18 * worldSize * worldSize);
-    const boatVerts = new Float32Array(36);
-    ReDrawMesh();
-    //add mat
-    var waterMat = new THREE.MeshLambertMaterial();
-    waterMat.color = new THREE.Color(0, 0.8, 1);
-    //boat mat
-    var boatMat = new THREE.MeshLambertMaterial();
-    boatMat.color = new THREE.Color(0.8, 0.5, 0.6);
-    //boatMat.wireframe = true;
-    //create mesh
-    const waterMesh = new THREE.Mesh(waterGeometry, waterMat);
-    waterMesh.position.set(-worldSize / 2, 0, -worldSize / 2);
-    const boatMesh = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), boatMat);
-    boatMesh.position.set(Boat.positionX, 0, Boat.positionZ);
-    //add to scene
-    scene.add(waterMesh);
-    scene.add(boatMesh);
     //add light
     const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
     directionalLight.position.set(50, 100, 50);
     scene.add(directionalLight);
+
+    //orbit controls
     var controls = new OrbitControls(camera, renderer.domElement);
 
     var Update = function () {
-      //call the render with the scene and the camera
       renderer.render(scene, camera);
-
       controls.update();
-      time += Settings.timeSpeed;
 
-      ReDrawMesh();
-      UpdateBoat();
+      /*do update stuff*/
+
       requestAnimationFrame(Update);
-
-      waterMat.wireframe = Settings.wireFrameMode;
     };
 
     requestAnimationFrame(Update);
@@ -279,7 +126,6 @@
 
     //link the resize of the window to the update of the camera
     window.addEventListener('resize', MyResize);
-
   </script>
 </body>
 
