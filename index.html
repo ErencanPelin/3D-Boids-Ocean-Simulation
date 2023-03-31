@@ -51,6 +51,7 @@
 
   <script type="module">
     import * as THREE from 'three';
+    import { Boid } from './build/boid.js';
     import { OrbitControls } from './build/controls/OrbitControls.js';
     import * as dat from 'dat.gui';
 
@@ -72,7 +73,7 @@
       separation: 0.5,
       alignment: 0.5,
       moveSpeed: 5,
-      worldSize: 30,
+      worldSize: 200,
     };
 
     //GUI
@@ -87,13 +88,20 @@
     //#endregion
 
     //create bounds Geometry and add to scene
-    const boundsGeometry = new THREE.BoxGeometry(40, 40, 40);
+    const boundsGeometry = new THREE.BoxGeometry(Boids.worldSize, Boids.worldSize, Boids.worldSize);
     var boxMat = new THREE.MeshBasicMaterial();
     boxMat.color = new THREE.Color(0, 0.8, 1);
     boxMat.wireframe = true;
     const boxMesh = new THREE.Mesh(boundsGeometry, boxMat);
     boxMesh.position.set(0, 0, 0);
     scene.add(boxMesh);
+
+    var allBoids = [];
+    for (var i = 0; i < 100; i++){
+      var boid = new Boid(Boids.worldSize);
+      boid.createBoid(scene);
+      allBoids.push(boid);
+    }
 
     //add light
     const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
