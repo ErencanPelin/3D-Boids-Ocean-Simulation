@@ -73,7 +73,7 @@
     //GUI
     const gui = new dat.GUI();
     const settingsFolder = gui.addFolder('Boid Settings');
-    //settingsFolder.add(BoidSettings, 'moveSpeed', 0, 20);
+    settingsFolder.add(BoidSettings, 'awareness', 0, 100);
     settingsFolder.add(BoidSettings, 'cohesion', 0, 1);
     settingsFolder.add(BoidSettings, 'separation', 0, 1);
     settingsFolder.add(BoidSettings, 'alignment', 0, 1);
