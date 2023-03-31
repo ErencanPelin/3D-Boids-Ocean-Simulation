@@ -73,9 +73,11 @@
     //GUI
     const gui = new dat.GUI();
     const settingsFolder = gui.addFolder('Boid Settings');
+    settingsFolder.add(BoidSettings, 'moveSpeed', 0, 10);
     settingsFolder.add(BoidSettings, 'awareness', 0, 100);
     settingsFolder.add(BoidSettings, 'cohesion', 0, 1);
     settingsFolder.add(BoidSettings, 'separation', 0, 1);
+    settingsFolder.add(BoidSettings, 'separationAwareness', 0, 50);
     settingsFolder.add(BoidSettings, 'alignment', 0, 1);
     settingsFolder.add(BoidSettings, 'worldSize', 10, 50);
     settingsFolder.open();
@@ -91,7 +93,7 @@
     scene.add(boxMesh);
 
     var allBoids = [];
-    for (var i = 0; i < 200; i++){
+    for (var i = 0; i < 500; i++){
       var boid = new Boid();
       boid.createBoid(scene);
       allBoids.push(boid);

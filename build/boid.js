@@ -2,10 +2,11 @@ import * as THREE from 'three';
 
 var BoidSettings = {
     cohesion: 0.2,
-    separation: 0.5,
+    separation: 0.2,
+    separationAwareness: 50,
     alignment: 0.2,
     awareness: 30,
-    moveSpeed: 2,
+    moveSpeed: 1,
     worldSize: 200,
 };
 
@@ -51,6 +52,8 @@ class Boid {
     flock(boids) {
         let alignment = this.align(boids);
         let cohesion = this.cohesion(boids);
+        let separation = this.separation(boids);
+        this.acceleration.add(separation);
         this.acceleration.add(alignment);
         this.acceleration.add(cohesion);
     }
@@ -96,6 +99,30 @@ class Boid {
             avg.setLength(BoidSettings.moveSpeed);
             avg.sub(this.velocity);
             avg.clampLength(-BoidSettings.cohesion, BoidSettings.cohesion);
+        }
+        return avg;
+    }
+
+    separation(boids) {
+        var avg = new THREE.Vector3(0, 0, 0);
+        let total = 0;
+        //loop through every nearby boid and set your own direction to the average of everyone elses
+        for (let other of boids) {
+            let distance = this.position.distanceTo(other.position);
+
+            if (other != this && distance < BoidSettings.separationAwareness) {
+                let diff = new THREE.Vector3().subVectors(this.position, other.position);
+                diff.divideScalar(distance);
+                avg.add(diff);
+                total++;
+            }
+        }
+
+        if (total > 0) { //if there are actually boids near us
+            avg.divideScalar(total);
+            avg.setLength(BoidSettings.moveSpeed);
+            avg.sub(this.velocity);
+            avg.clampLength(-BoidSettings.separation, BoidSettings.separation);
         }
         return avg;
     }
