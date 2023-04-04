@@ -93,8 +93,8 @@
     scene.add(boxMesh);
 
     var allBoids = [];
-    for (var i = 0; i < 1000; i++){
-      var boid = new Boid();
+    for (let i = 0; i < 500; i++){
+      let boid = new Boid();
       boid.createBoid(scene);
       allBoids.push(boid);
     }
@@ -112,7 +112,7 @@
       controls.update();
 
       /*do update stuff*/
-      for (i = 0; i < allBoids.length; i++){
+      for (let i = 0; i < allBoids.length; i++){
         allBoids[i].edgeAvoid();
         allBoids[i].flock(allBoids);
         allBoids[i].update();

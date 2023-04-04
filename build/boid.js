@@ -50,6 +50,11 @@ class Boid {
             this.position.setZ(-(BoidSettings.worldSize * 0.5));
     }
 
+    viewingAngle(other){
+        let rads = this.position.angleTo(other);
+        return (rads < 3.927 || rads > 5.4978)
+    }
+
     flock(boids) {
         let alignment = this.align(boids);
         let cohesion = this.cohesion(boids);
@@ -66,7 +71,7 @@ class Boid {
         for (let other of boids) {
             let distance = this.position.distanceTo(other.position);
 
-            if (other != this && distance < BoidSettings.awareness) {
+            if (other != this && distance < BoidSettings.awareness && this.viewingAngle(other.position)) {
                 avg.add(other.velocity);
                 total++;
             }
@@ -88,7 +93,7 @@ class Boid {
         for (let other of boids) {
             let distance = this.position.distanceTo(other.position);
 
-            if (other != this && distance < BoidSettings.awareness) {
+            if (other != this && distance < BoidSettings.awareness && this.viewingAngle(other.position)) {
                 avg.add(other.position);
                 total++;
             }
@@ -111,7 +116,7 @@ class Boid {
         for (let other of boids) {
             let distance = this.position.distanceTo(other.position);
 
-            if (other != this && distance < BoidSettings.separationAwareness) {
+            if (other != this && distance < BoidSettings.separationAwareness && this.viewingAngle(other.position)) {
                 let diff = new THREE.Vector3().subVectors(this.position, other.position);
                 diff.divideScalar(distance);
                 avg.add(diff);
