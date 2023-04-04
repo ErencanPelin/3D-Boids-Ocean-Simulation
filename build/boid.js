@@ -1,13 +1,13 @@
 import * as THREE from 'three';
 
 var BoidSettings = {
-    cohesion: 0.2,
-    separation: 0.2,
-    separationAwareness: 50,
-    alignment: 0.2,
-    awareness: 30,
-    moveSpeed: 1,
-    worldSize: 200,
+    cohesion: 0.02,
+    separation: 0.15,
+    separationAwareness: 3,
+    alignment: 0.02,
+    awareness: 20,
+    moveSpeed: 0.8,
+    worldSize: 500,
 };
 
 class Boid {
@@ -17,6 +17,7 @@ class Boid {
         var zSpawn = (BoidSettings.worldSize * Math.random()) - BoidSettings.worldSize / 2;
 
         //start each boid at a random position
+        this.color = new THREE.Color(0, 0.7, 1);
         this.position = new THREE.Vector3(xSpawn, ySpawn, zSpawn);
         this.velocity = new THREE.Vector3().randomDirection();//new THREE.Vector3(Math.random() * 2 - 1, Math.random() * 2 - 1, Math.random() * 2 - 1);
         this.velocity.setLength(Math.random() * (4 - 2) + 2);
@@ -49,6 +50,11 @@ class Boid {
             this.position.setZ(-(BoidSettings.worldSize * 0.5));
     }
 
+    viewingAngle(other){
+        let rads = this.position.angleTo(other);
+        return (rads < 3.927 || rads > 5.4978)
+    }
+
     flock(boids) {
         let alignment = this.align(boids);
         let cohesion = this.cohesion(boids);
@@ -65,7 +71,7 @@ class Boid {
         for (let other of boids) {
             let distance = this.position.distanceTo(other.position);
 
-            if (other != this && distance < BoidSettings.awareness) {
+            if (other != this && distance < BoidSettings.awareness && this.viewingAngle(other.position)) {
                 avg.add(other.velocity);
                 total++;
             }
@@ -87,7 +93,7 @@ class Boid {
         for (let other of boids) {
             let distance = this.position.distanceTo(other.position);
 
-            if (other != this && distance < BoidSettings.awareness) {
+            if (other != this && distance < BoidSettings.awareness && this.viewingAngle(other.position)) {
                 avg.add(other.position);
                 total++;
             }
@@ -110,7 +116,7 @@ class Boid {
         for (let other of boids) {
             let distance = this.position.distanceTo(other.position);
 
-            if (other != this && distance < BoidSettings.separationAwareness) {
+            if (other != this && distance < BoidSettings.separationAwareness && this.viewingAngle(other.position)) {
                 let diff = new THREE.Vector3().subVectors(this.position, other.position);
                 diff.divideScalar(distance);
                 avg.add(diff);
@@ -130,7 +136,7 @@ class Boid {
     createBoid(scene) {
         const boidGeometry = new THREE.SphereGeometry();
         const boidMat = new THREE.MeshBasicMaterial();
-        boidMat.color = new THREE.Color(1, 1, 1);
+        boidMat.color = this.color;
         this.boidMesh = new THREE.Mesh(boidGeometry, boidMat);
         this.boidMesh.position.set(this.position.x, this.position.y, this.position.z);
         scene.add(this.boidMesh);

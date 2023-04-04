@@ -52,6 +52,8 @@
   <script type="module">
     import * as THREE from 'three';
     import { Boid } from './build/boid.js';
+    import { Octree } from './build/octree/octree.js';
+    import { Box } from './build/octree/box.js';
     import { BoidSettings } from './build/boid.js';
     import { OrbitControls } from './build/controls/OrbitControls.js';
     import * as dat from 'dat.gui';
@@ -92,11 +94,17 @@
     boxMesh.position.set(0, 0, 0);
     scene.add(boxMesh);
 
-    var allBoids = [];
-    for (var i = 0; i < 500; i++){
-      var boid = new Boid();
+    var boids = []; //list of all active boids
+    const octree = new Octree(
+      new Box(
+        -BoidSettings.worldSize * 0.5, -BoidSettings.worldSize * 0.5, -BoidSettings.worldSize * 0.5,
+        BoidSettings.worldSize * 0.5, BoidSettings.worldSize * 0.5, BoidSettings.worldSize * 0.5),
+      10); //boids octree, used for spacial partitioning and boid-neighbour comparison optimisation
+    for (let i = 0; i < 10000; i++) {
+      let boid = new Boid();
       boid.createBoid(scene);
-      allBoids.push(boid);
+      boids.push(boid);
+      octree.insert(boid);
     }
 
     //add light
@@ -110,12 +118,23 @@
     var Update = function () {
       renderer.render(scene, camera);
       controls.update();
+      const awarenessRange = BoidSettings.awareness;// * BoidSettings.awareness;
 
       /*do update stuff*/
-      for (i = 0; i < allBoids.length; i++){
-        allBoids[i].edgeAvoid();
-        allBoids[i].flock(allBoids);
-        allBoids[i].update();
+      for (let i = 0; i < boids.length; i++) {
+        boids[i].edgeAvoid();
+        let search = new Box(
+          boids[i].position.x - awarenessRange,
+          boids[i].position.y - awarenessRange,
+          boids[i].position.z - awarenessRange,
+          awarenessRange * 2,
+          awarenessRange * 2,
+          awarenessRange * 2);
+        let q = octree.query(search);
+        //  if (q.length > 0)  
+     //   console.log(q.length);
+        boids[i].flock(q);
+        boids[i].update();
       }
 
       requestAnimationFrame(Update);
