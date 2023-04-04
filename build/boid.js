@@ -7,7 +7,7 @@ var BoidSettings = {
     alignment: 0.02,
     awareness: 20,
     moveSpeed: 0.8,
-    worldSize: 200,
+    worldSize: 500,
 };
 
 class Boid {
