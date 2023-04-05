@@ -51,10 +51,10 @@
 
   <script type="module">
     import * as THREE from 'three';
-    import { Boid } from './build/boid.js';
+    import { Boid } from './build/boids/boid.js';
     import { Octree } from './build/octree/octree.js';
     import { Box } from './build/octree/box.js';
-    import { BoidSettings } from './build/boid.js';
+    import { BoidSettings } from './build/boids/boid.js';
     import { OrbitControls } from './build/controls/OrbitControls.js';
     import * as dat from 'dat.gui';
 
@@ -70,20 +70,20 @@
     renderer.setSize(window.innerWidth, window.innerHeight);
     document.body.appendChild(renderer.domElement);
 
-    //#region GUI
-
-    //GUI
-    const gui = new dat.GUI();
-    const settingsFolder = gui.addFolder('Boid Settings');
-    settingsFolder.add(BoidSettings, 'moveSpeed', 0, 10);
-    settingsFolder.add(BoidSettings, 'awareness', 0, 100);
-    settingsFolder.add(BoidSettings, 'cohesion', 0, 1);
-    settingsFolder.add(BoidSettings, 'separation', 0, 1);
-    settingsFolder.add(BoidSettings, 'separationAwareness', 0, 50);
-    settingsFolder.add(BoidSettings, 'alignment', 0, 1);
-    settingsFolder.add(BoidSettings, 'worldSize', 10, 50);
-    settingsFolder.open();
-    //#endregion
+    /* //#region GUI
+ 
+     //GUI
+     const gui = new dat.GUI();
+     const settingsFolder = gui.addFolder('Boid Settings');
+     settingsFolder.add(BoidSettings, 'moveSpeed', 0, 10);
+     settingsFolder.add(BoidSettings, 'awareness', 0, 100);
+     settingsFolder.add(BoidSettings, 'cohesion', 0, 1);
+     settingsFolder.add(BoidSettings, 'separation', 0, 1);
+     settingsFolder.add(BoidSettings, 'separationAwareness', 0, 50);
+     settingsFolder.add(BoidSettings, 'alignment', 0, 1);
+     settingsFolder.add(BoidSettings, 'worldSize', 10, 50);
+     settingsFolder.open();
+     //#endregion*/
 
     //create bounds Geometry and add to scene
     const boundsGeometry = new THREE.BoxGeometry(BoidSettings.worldSize, BoidSettings.worldSize, BoidSettings.worldSize);
@@ -100,11 +100,32 @@
         -BoidSettings.worldSize * 0.5, -BoidSettings.worldSize * 0.5, -BoidSettings.worldSize * 0.5,
         BoidSettings.worldSize * 0.5, BoidSettings.worldSize * 0.5, BoidSettings.worldSize * 0.5),
       10); //boids octree, used for spacial partitioning and boid-neighbour comparison optimisation
-    for (let i = 0; i < 10000; i++) {
-      let boid = new Boid();
+    for (let i = 0; i < 2000; i++) {
+      let boid = new Boid(0,
+      0.02,
+      0.15,
+      0.02,
+      0.8,
+      3,
+      50,
+      new THREE.Color(0, 1, 1));
       boid.createBoid(scene);
       boids.push(boid);
       octree.insert(boid);
+    }
+    for (let i = 0; i < 50; i++) {
+    let big = new Boid(
+      1,
+      0.02,
+      0.15,
+      0.02,
+      0.4,
+      3,
+      50,
+      new THREE.Color(1, 0, 0));
+      big.createBoid(scene);
+      boids.push(big);
+      octree.insert(big);
     }
 
     //add light
@@ -118,7 +139,7 @@
     var Update = function () {
       renderer.render(scene, camera);
       controls.update();
-      const awarenessRange = BoidSettings.awareness;// * BoidSettings.awareness;
+      const awarenessRange = 100;
 
       /*do update stuff*/
       for (let i = 0; i < boids.length; i++) {
@@ -132,7 +153,7 @@
           awarenessRange * 2);
         let q = octree.query(search);
         //  if (q.length > 0)  
-     //   console.log(q.length);
+        //   console.log(q.length);
         boids[i].flock(q);
         boids[i].update();
       }
