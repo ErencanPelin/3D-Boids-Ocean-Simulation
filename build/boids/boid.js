@@ -96,7 +96,7 @@ class Boid {
                     total++;
                     continue;
                 }
-                avg.set(other.velocity.x, other.velocity.y, other.velocity.z).multiplyScalar(2);
+                avg.set(other.velocity.x, other.velocity.y, other.velocity.z).multiplyScalar(20);
             }
         }
 
@@ -148,12 +148,12 @@ class Boid {
                     avg.add(diff);
                     total++;
                 }
-                else{
+         /*        else{
                     let diff = new THREE.Vector3().subVectors(this.position, other.position);
                     diff.divideScalar(distance);
-                    avg.add(diff.multiplyScalar(3));
+                    avg.add(diff.multiplyScalar(10));
                     total++;
-                }
+                } */
             }
         }
 
