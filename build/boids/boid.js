@@ -21,15 +21,6 @@ class Boid {
         this._awareness = awareness;
         this._color = color;
 
-        /*         this._id = 0;
-                this._cohesion = 0.02;
-                this._separation = 0.15;
-                this._alignment = 0.02;
-                this._moveSpeed = 0.8;
-                this._separationAwareness = 3;
-                this._awareness = 50;
-                this._color = new THREE.Color(1, 1, 1);
-         */
         //spawn
         var xSpawn = ((BoidSettings.worldSize - 50) * Math.random()) - ((BoidSettings.worldSize * 0.5) - 25);
         var ySpawn = ((BoidSettings.worldSize - 50) * Math.random()) - ((BoidSettings.worldSize * 0.5) - 25);
@@ -51,23 +42,6 @@ class Boid {
         this.acceleration.set(0, 0, 0);
     }
 
-    edgeAvoid() {
-        if (this.position.x <= -(BoidSettings.worldSize * 0.5))
-            this.position.setX(BoidSettings.worldSize * 0.5);
-        else if (this.position.x >= BoidSettings.worldSize * 0.5)
-            this.position.setX(-(BoidSettings.worldSize * 0.5));
-
-        if (this.position.y <= -(BoidSettings.worldSize * 0.5))
-            this.position.setY((BoidSettings.worldSize * 0.5));
-        else if (this.position.y >= BoidSettings.worldSize * 0.5)
-            this.position.setY(-(BoidSettings.worldSize * 0.5));
-
-        if (this.position.z <= -(BoidSettings.worldSize * 0.5))
-            this.position.setZ((BoidSettings.worldSize * 0.5));
-        else if (this.position.z >= BoidSettings.worldSize * 0.5)
-            this.position.setZ(-(BoidSettings.worldSize * 0.5));
-    }
-
     viewingAngle(other) {
         let rads = this.position.angleTo(other);
         // return true;
@@ -78,11 +52,13 @@ class Boid {
         let alignment = this.align(boids);
         let cohesion = this.cohesion(boids);
         let separation = this.separation(boids);
-        let avoidance = this.avoidance();
+        let avoidance = this.avoidance(boids);
+        let edgeAvoidance = this.edgeAvoidance();
         this.acceleration.add(separation);
         this.acceleration.add(alignment);
         this.acceleration.add(cohesion);
         this.acceleration.add(avoidance);
+        this.acceleration.add(edgeAvoidance);
     }
 
     align(boids) {
@@ -96,9 +72,7 @@ class Boid {
                 if (this._id >= other._id) {
                     avg.add(other.velocity);
                     total++;
-                    continue;
                 }
-                //avg.set(-other.velocity.x, -other.velocity.y, -other.velocity.z);//.multiplyScalar(20);
             }
         }
 
@@ -143,19 +117,21 @@ class Boid {
         for (let other of boids) {
             let distance = this.position.distanceTo(other.position);
 
-            if (other != this && distance < this._separationAwareness && this.viewingAngle(other.position)) {
-                if (this._id >= other._id) {
+            if (this._id >= other._id) {
+                if (other != this && distance < this._separationAwareness && this.viewingAngle(other.position)) {
                     let diff = new THREE.Vector3().subVectors(this.position, other.position);
                     diff.divideScalar(distance);
                     avg.add(diff);
                     total++;
                 }
-                /*        else{
-                           let diff = new THREE.Vector3().subVectors(this.position, other.position);
-                           diff.divideScalar(distance);
-                           avg.add(diff.multiplyScalar(10));
-                           total++;
-                       } */
+            }
+            else {
+                if (other != this && distance < this._separationAwareness * 6 && this.viewingAngle(other.position)) {
+                    let diff = new THREE.Vector3().subVectors(this.position, other.position);
+                    diff.divideScalar(distance);
+                    avg.add(diff);
+                    total++;
+                }
             }
         }
 
@@ -168,7 +144,32 @@ class Boid {
         return avg;
     }
 
-    avoidance() {
+    avoidance(boids) {
+        let total = 0;
+        var avg = new THREE.Vector3();
+
+        //loop through every nearby boid and set your own direction to the average of everyone elses
+        for (let other of boids) {
+            let distance = this.position.distanceTo(other.position);
+
+            if (other != this && distance < this._separationAwareness * 10 && this.viewingAngle(other.position)) {
+                if (this._id < other._id) {
+                    avg.add(new THREE.Vector3().copy(this.velocity).reflect(new THREE.Vector3().subVectors(this.position, other.position).normalize()));
+                    total++;
+                }
+            }
+        }
+
+        if (total > 0) { //if there are actually boids near us
+            avg.divideScalar(total);
+            avg.setLength(this._moveSpeed);
+            avg.sub(this.velocity);
+            avg.clampLength(-this._separation, this._separation);
+        }
+        return avg;
+    }
+
+    edgeAvoidance() {
         var avg = new THREE.Vector3(0, 0, 0);
 
         if (this.position.x - 20 <= -BoidSettings.worldSize * 0.5)

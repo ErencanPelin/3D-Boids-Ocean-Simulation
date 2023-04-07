@@ -6,3 +6,6 @@ Contributors: Stephen, Michael, Nathan, Erencan
 - boids's behaviour is not affected by boids behind it (boid field-of-view)
 - customisable behaviour via GUI sliders
 - limited worldsize 
+- avoids edges of the world
+- boids avoid boids which are higher up on the 'food chain' than them
+- boids follow boids which are lower on the 'food chain' than them
