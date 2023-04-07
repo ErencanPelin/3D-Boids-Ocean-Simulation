@@ -101,23 +101,24 @@
         BoidSettings.worldSize * 0.5, BoidSettings.worldSize * 0.5, BoidSettings.worldSize * 0.5),
       10); //boids octree, used for spacial partitioning and boid-neighbour comparison optimisation
     for (let i = 0; i < 2000; i++) {
-      let boid = new Boid(0,
+      let boid = new Boid(
+        0,
       0.02,
       0.15,
       0.02,
       0.8,
       3,
-      50,
+      25,
       new THREE.Color(0, 1, 1));
       boid.createBoid(scene);
       boids.push(boid);
       octree.insert(boid);
     }
-    for (let i = 0; i < 50; i++) {
+    for (let i = 0; i < 100; i++) {
     let big = new Boid(
       1,
       0.02,
-      0.15,
+      0.5,
       0.02,
       0.4,
       3,
@@ -143,7 +144,6 @@
 
       /*do update stuff*/
       for (let i = 0; i < boids.length; i++) {
-        boids[i].edgeAvoid();
         let search = new Box(
           boids[i].position.x - awarenessRange,
           boids[i].position.y - awarenessRange,
@@ -152,8 +152,6 @@
           awarenessRange * 2,
           awarenessRange * 2);
         let q = octree.query(search);
-        //  if (q.length > 0)  
-        //   console.log(q.length);
         boids[i].flock(q);
         boids[i].update();
       }

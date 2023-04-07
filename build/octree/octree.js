@@ -61,13 +61,13 @@ class Octree {
         found.push(point);
       }
     }
-
+    
     if (this.children) {
       for (const child of this.children) {
         child.query(range, found);
       }
     }
-
+    
     return found;
   }
 }
