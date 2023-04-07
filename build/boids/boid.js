@@ -31,9 +31,9 @@ class Boid {
                 this._color = new THREE.Color(1, 1, 1);
          */
         //spawn
-        var xSpawn = (BoidSettings.worldSize * Math.random()) - BoidSettings.worldSize / 2;
-        var ySpawn = (BoidSettings.worldSize * Math.random()) - BoidSettings.worldSize / 2;
-        var zSpawn = (BoidSettings.worldSize * Math.random()) - BoidSettings.worldSize / 2;
+        var xSpawn = ((BoidSettings.worldSize - 50) * Math.random()) - ((BoidSettings.worldSize * 0.5) - 25);
+        var ySpawn = ((BoidSettings.worldSize - 50) * Math.random()) - ((BoidSettings.worldSize * 0.5) - 25);
+        var zSpawn = ((BoidSettings.worldSize - 50) * Math.random()) - ((BoidSettings.worldSize * 0.5) - 25);
 
         //start each boid at a random position
         this.position = new THREE.Vector3(xSpawn, ySpawn, zSpawn);
@@ -78,9 +78,11 @@ class Boid {
         let alignment = this.align(boids);
         let cohesion = this.cohesion(boids);
         let separation = this.separation(boids);
+        let avoidance = this.avoidance();
         this.acceleration.add(separation);
         this.acceleration.add(alignment);
         this.acceleration.add(cohesion);
+        this.acceleration.add(avoidance);
     }
 
     align(boids) {
@@ -96,7 +98,7 @@ class Boid {
                     total++;
                     continue;
                 }
-                avg.set(other.velocity.x, other.velocity.y, other.velocity.z).multiplyScalar(20);
+                //avg.set(-other.velocity.x, -other.velocity.y, -other.velocity.z);//.multiplyScalar(20);
             }
         }
 
@@ -148,12 +150,12 @@ class Boid {
                     avg.add(diff);
                     total++;
                 }
-         /*        else{
-                    let diff = new THREE.Vector3().subVectors(this.position, other.position);
-                    diff.divideScalar(distance);
-                    avg.add(diff.multiplyScalar(10));
-                    total++;
-                } */
+                /*        else{
+                           let diff = new THREE.Vector3().subVectors(this.position, other.position);
+                           diff.divideScalar(distance);
+                           avg.add(diff.multiplyScalar(10));
+                           total++;
+                       } */
             }
         }
 
@@ -166,9 +168,33 @@ class Boid {
         return avg;
     }
 
+    avoidance() {
+        var avg = new THREE.Vector3(0, 0, 0);
+
+        if (this.position.x - 20 <= -BoidSettings.worldSize * 0.5)
+            avg.setX(1);
+        if (this.position.x + 20 >= BoidSettings.worldSize * 0.5)
+            avg.setX(-1);
+
+        if (this.position.y - 20 <= -BoidSettings.worldSize * 0.5)
+            avg.setY(1);
+        if (this.position.y + 20 >= BoidSettings.worldSize * 0.5)
+            avg.setY(-1);
+
+        if (this.position.z - 20 <= -BoidSettings.worldSize * 0.5)
+            avg.setZ(1);
+        if (this.position.z + 20 >= BoidSettings.worldSize * 0.5)
+            avg.setZ(-1);
+
+        avg.setLength(this._moveSpeed);
+        avg.clampLength(-this._alignment, this._alignment);
+        return avg;
+    }
+
     createBoid(scene) {
         const boidGeometry = new THREE.SphereGeometry();
         const boidMat = new THREE.MeshBasicMaterial();
+        boidMat.wireframe = true;
         boidMat.color = this._color;
         this.boidMesh = new THREE.Mesh(boidGeometry, boidMat);
         this.boidMesh.position.set(this.position.x, this.position.y, this.position.z);
