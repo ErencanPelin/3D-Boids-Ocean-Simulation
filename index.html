@@ -51,6 +51,10 @@
 
   <script type="module">
     import * as THREE from 'three';
+    import { Boid } from './build/boids/boid.js';
+    import { Octree } from './build/octree/octree.js';
+    import { Box } from './build/octree/box.js';
+    import { BoidSettings } from './build/boids/boid.js';
     import { OrbitControls } from './build/controls/OrbitControls.js';
     import * as dat from 'dat.gui';
 
@@ -59,41 +63,71 @@
     var ratio = window.innerWidth / window.innerHeight;
 
     var camera = new THREE.PerspectiveCamera(45, ratio, 0.1, 1000);
-    camera.position.set(0, 0, 15);
+    camera.position.set(0, 0, 500);
     camera.lookAt(0, 0, 1);
 
     var renderer = new THREE.WebGLRenderer();
     renderer.setSize(window.innerWidth, window.innerHeight);
     document.body.appendChild(renderer.domElement);
 
-    //#region GUI
-    var Boids = {
-      cohesion: 0.5,
-      separation: 0.5,
-      alignment: 0.5,
-      moveSpeed: 5,
-      worldSize: 30,
-    };
-
-    //GUI
-    const gui = new dat.GUI();
-    const settingsFolder = gui.addFolder('Boid Settings');
-    settingsFolder.add(Boids, 'moveSpeed', 0, 20);
-    settingsFolder.add(Boids, 'cohesion', 0, 1);
-    settingsFolder.add(Boids, 'separation', 0, 1);
-    settingsFolder.add(Boids, 'alignment', 0, 1);
-    settingsFolder.add(Boids, 'worldSize', 10, 50);
-    settingsFolder.open();
-    //#endregion
+    /* //#region GUI
+ 
+     //GUI
+     const gui = new dat.GUI();
+     const settingsFolder = gui.addFolder('Boid Settings');
+     settingsFolder.add(BoidSettings, 'moveSpeed', 0, 10);
+     settingsFolder.add(BoidSettings, 'awareness', 0, 100);
+     settingsFolder.add(BoidSettings, 'cohesion', 0, 1);
+     settingsFolder.add(BoidSettings, 'separation', 0, 1);
+     settingsFolder.add(BoidSettings, 'separationAwareness', 0, 50);
+     settingsFolder.add(BoidSettings, 'alignment', 0, 1);
+     settingsFolder.add(BoidSettings, 'worldSize', 10, 50);
+     settingsFolder.open();
+     //#endregion*/
 
     //create bounds Geometry and add to scene
-    const boundsGeometry = new THREE.BoxGeometry(40, 40, 40);
+    const boundsGeometry = new THREE.BoxGeometry(BoidSettings.worldSize, BoidSettings.worldSize, BoidSettings.worldSize);
     var boxMat = new THREE.MeshBasicMaterial();
     boxMat.color = new THREE.Color(0, 0.8, 1);
     boxMat.wireframe = true;
     const boxMesh = new THREE.Mesh(boundsGeometry, boxMat);
     boxMesh.position.set(0, 0, 0);
     scene.add(boxMesh);
+
+    var boids = []; //list of all active boids
+    const octree = new Octree(
+      new Box(
+        -BoidSettings.worldSize * 0.5, -BoidSettings.worldSize * 0.5, -BoidSettings.worldSize * 0.5,
+        BoidSettings.worldSize * 0.5, BoidSettings.worldSize * 0.5, BoidSettings.worldSize * 0.5),
+      10); //boids octree, used for spacial partitioning and boid-neighbour comparison optimisation
+    for (let i = 0; i < 2000; i++) {
+      let boid = new Boid(
+        0,
+      0.02,
+      0.15,
+      0.02,
+      0.8,
+      3,
+      25,
+      new THREE.Color(0, 1, 1));
+      boid.createBoid(scene);
+      boids.push(boid);
+      octree.insert(boid);
+    }
+    for (let i = 0; i < 100; i++) {
+    let big = new Boid(
+      1,
+      0.02,
+      0.5,
+      0.02,
+      0.4,
+      3,
+      50,
+      new THREE.Color(1, 0, 0));
+      big.createBoid(scene);
+      boids.push(big);
+      octree.insert(big);
+    }
 
     //add light
     const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
@@ -106,8 +140,21 @@
     var Update = function () {
       renderer.render(scene, camera);
       controls.update();
+      const awarenessRange = 100;
 
       /*do update stuff*/
+      for (let i = 0; i < boids.length; i++) {
+        let search = new Box(
+          boids[i].position.x - awarenessRange,
+          boids[i].position.y - awarenessRange,
+          boids[i].position.z - awarenessRange,
+          awarenessRange * 2,
+          awarenessRange * 2,
+          awarenessRange * 2);
+        let q = octree.query(search);
+        boids[i].flock(q);
+        boids[i].update();
+      }
 
       requestAnimationFrame(Update);
     };
