@@ -1,3 +1,4 @@
+//octree contains boxes, boxes used to sample areas from the octree
 class Box {
     constructor(x, y, z, width, height, depth) {
         this.x = x;
@@ -19,6 +20,7 @@ class Box {
         );
     }
 
+    //return true if this box can detect another box within in
     intersects(other) {
         return !(
             other.x > this.x + this.width ||
