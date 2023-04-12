@@ -2,10 +2,10 @@ import { Box } from './box.js';
 
 class Octree {
   constructor(bounds, capacity) {
-    this.bounds = bounds;
-    this.capacity = capacity;
-    this.points = [];
-    this.children = null;
+    this.bounds = bounds; //box area
+    this.capacity = capacity; //amount of boids before we subdivide
+    this.points = []; //list of boids in this box
+    this.children = null; //children boxes
   }
 
   subdivide() {
@@ -16,6 +16,7 @@ class Octree {
     const h = this.bounds.height / 2;
     const d = this.bounds.depth / 2;
 
+    //create children boxes with new positions and sizes
     this.children = [
       new Octree(new Box(x, y, z, w, h, d), this.capacity),
       new Octree(new Box(x + w, y, z, w, h, d), this.capacity),
@@ -56,12 +57,14 @@ class Octree {
       return found;
     }
 
+    //add all boids present in this box
     for (const point of this.points) {
       if (range.contains(point.position)) {
         found.push(point);
       }
     }
     
+    //ask the children of this box for any points they have stored
     if (this.children) {
       for (const child of this.children) {
         child.query(range, found);
