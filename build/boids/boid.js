@@ -12,6 +12,7 @@ class Boid {
         awareness = 50,
         color) {
 
+        //set values
         this._id = id;
         this._cohesion = cohesion;
         this._separation = separation;
@@ -34,21 +35,22 @@ class Boid {
     }
 
     update() {
-        this.position.add(this.velocity);
+        this.position.add(this.velocity); //update reference position
         this.velocity.add(this.acceleration);
-        this.velocity.clampLength(-this._moveSpeed, this._moveSpeed);
-        this.boidMesh.position.set(this.position.x, this.position.y, this.position.z);
+        this.velocity.clampLength(-this._moveSpeed, this._moveSpeed); //clamp the length of the vector so it doesn't get faster than the movespeed
+        this.boidMesh.position.set(this.position.x, this.position.y, this.position.z); //update the mesh/object position in the scene
 
-        this.acceleration.set(0, 0, 0);
+        this.acceleration.set(0, 0, 0); //reset acceleration
     }
 
     viewingAngle(other) {
         let rads = this.position.angleTo(other);
-        // return true;
-        return (rads < 3.927 || rads > 5.4978)
+        // return true if other boid position is within our viewing angle
+        return (rads < 3.927 || rads > 5.4978);
     }
 
     flock(boids) {
+        //by adding all the forces together, we can simulate all of them at the same time (just like physics in real life)
         let alignment = this.align(boids);
         let cohesion = this.cohesion(boids);
         let separation = this.separation(boids);
@@ -61,30 +63,34 @@ class Boid {
         this.acceleration.add(edgeAvoidance);
     }
 
+    //align each boid to the average direction of every its surrounding boids
     align(boids) {
-        var avg = new THREE.Vector3(0, 0, 0);
-        let total = 0;
+        var avg = new THREE.Vector3(0, 0, 0); //store the average
+        let total = 0; //number of boids we've sampled
         //loop through every nearby boid and set your own direction to the average of everyone elses
         for (let other of boids) {
+            //the closer the other boids are, the more they should affect our direction
             let distance = this.position.distanceTo(other.position);
 
             if (other != this && distance < this._awareness && this.viewingAngle(other.position)) {
-                if (this._id >= other._id) {
+                if (this._id >= other._id) { //don't align with enemy boids
                     avg.add(other.velocity);
                     total++;
                 }
             }
         }
 
+        //if we actually sampled any / if there are boids around us
         if (total > 0) { //if there are actually boids near us
-            avg.divideScalar(total);
+            avg.divideScalar(total); //divide by the number of samples to find the average
             avg.setLength(this._moveSpeed);
-            avg.sub(this.velocity);
-            avg.clampLength(-this._alignment, this._alignment);
+            avg.sub(this.velocity); //subtract our current velocity so we gradually turn to face the average
+            avg.clampLength(-this._alignment, this._alignment); //clamp the length between our alignment constant
         }
         return avg;
     }
 
+    //flock to the average position of surrounding boids
     cohesion(boids) {
         var avg = new THREE.Vector3(0, 0, 0);
         let total = 0;
@@ -93,7 +99,7 @@ class Boid {
             let distance = this.position.distanceTo(other.position);
 
             if (other != this && distance < this._awareness && this.viewingAngle(other.position)) {
-                if (this._id >= other._id) {
+                if (this._id >= other._id) { //don't flock to enemy boids
                     avg.add(other.position);
                     total++;
                 }
@@ -105,17 +111,18 @@ class Boid {
             avg.sub(this.position);
             avg.setLength(this._moveSpeed);
             avg.sub(this.velocity);
-            avg.clampLength(-this._cohesion, this._cohesion);
+            avg.clampLength(-this._cohesion, this._cohesion); //clamp length to constant
         }
         return avg;
     }
 
+    //move away from boids to avoid collisions
     separation(boids) {
         var avg = new THREE.Vector3(0, 0, 0);
         let total = 0;
         //loop through every nearby boid and set your own direction to the average of everyone elses
         for (let other of boids) {
-            let distance = this.position.distanceTo(other.position);
+            let distance = this.position.distanceTo(other.position); //move more if the other boid is closer
 
             if (this._id >= other._id) {
                 if (other != this && distance < this._separationAwareness && this.viewingAngle(other.position)) {
@@ -125,7 +132,7 @@ class Boid {
                     total++;
                 }
             }
-            else {
+            else { //move further away from enemy boids
                 if (other != this && distance < this._separationAwareness * 6 && this.viewingAngle(other.position)) {
                     let diff = new THREE.Vector3().subVectors(this.position, other.position);
                     diff.divideScalar(distance);
@@ -144,6 +151,7 @@ class Boid {
         return avg;
     }
 
+    //custom rule, avoid going near enemy boids
     avoidance(boids) {
         let total = 0;
         var avg = new THREE.Vector3();
@@ -154,7 +162,12 @@ class Boid {
 
             if (other != this && distance < this._separationAwareness * 10 && this.viewingAngle(other.position)) {
                 if (this._id < other._id) {
-                    avg.add(new THREE.Vector3().copy(this.velocity).reflect(new THREE.Vector3().subVectors(this.position, other.position).normalize()));
+                    avg.add(new THREE.Vector3()
+                        .copy(this.velocity) //create new reference (so we don't overwrite)
+                        .reflect( //point in the opposite direction
+                            new THREE.Vector3().subVectors(this.position, other.position).normalize(), //direction from this boid to other boid
+                        ),
+                    );
                     total++;
                 }
             }
@@ -169,6 +182,7 @@ class Boid {
         return avg;
     }
 
+    //avoid going near edges by reflecting off them
     edgeAvoidance() {
         var avg = new THREE.Vector3(0, 0, 0);
 
@@ -203,4 +217,4 @@ class Boid {
     }
 }
 
-export { Boid, BoidSettings };
+export { Boid };

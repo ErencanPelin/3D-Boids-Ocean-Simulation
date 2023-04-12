@@ -85,7 +85,7 @@
      settingsFolder.open();
      //#endregion*/
 
-    //create bounds Geometry and add to scene
+    //create box wireframe Geometry and add to scene to visualise the world area
     const boundsGeometry = new THREE.BoxGeometry(BoidSettings.worldSize, BoidSettings.worldSize, BoidSettings.worldSize);
     var boxMat = new THREE.MeshBasicMaterial();
     boxMat.color = new THREE.Color(0, 0.8, 1);
@@ -94,36 +94,42 @@
     boxMesh.position.set(0, 0, 0);
     scene.add(boxMesh);
 
-    var boids = []; //list of all active boids
+    var boids = []; //list of all active boids in the simulation
+    //boids octree, used for spacial partitioning and boid-neighbour comparison optimisation
     const octree = new Octree(
       new Box(
         -BoidSettings.worldSize * 0.5, -BoidSettings.worldSize * 0.5, -BoidSettings.worldSize * 0.5,
         BoidSettings.worldSize * 0.5, BoidSettings.worldSize * 0.5, BoidSettings.worldSize * 0.5),
-      10); //boids octree, used for spacial partitioning and boid-neighbour comparison optimisation
+      10);
+
+    //creates 2000 normal 'blue' boids
     for (let i = 0; i < 2000; i++) {
       let boid = new Boid(
-        0,
-      0.02,
-      0.15,
-      0.02,
-      0.8,
-      3,
-      25,
-      new THREE.Color(0, 1, 1));
-      boid.createBoid(scene);
-      boids.push(boid);
-      octree.insert(boid);
+        0, //id
+        0.02, //cohesian amount 0 - 1
+        0.15, //separation amount 0 - 1
+        0.02, //alignment amount 0 - 1
+        0.8, //movespeed
+        3, //separation awareness
+        25, //awareness
+        new THREE.Color(0, 1, 1), //boid color
+      );
+      boid.createBoid(scene); //render the boid
+      boids.push(boid); //add the boid to the list
+      octree.insert(boid); //add the boid to the octree
     }
+    //create 100 enemy 'red' boids
     for (let i = 0; i < 100; i++) {
-    let big = new Boid(
-      1,
-      0.02,
-      0.5,
-      0.02,
-      0.4,
-      3,
-      50,
-      new THREE.Color(1, 0, 0));
+      let big = new Boid(
+        1, //id (greater than 0 means it'll chase the blue boids)
+        0.02,
+        0.5,
+        0.02,
+        0.4,
+        3,
+        50,
+        new THREE.Color(1, 0, 0),
+      );
       big.createBoid(scene);
       boids.push(big);
       octree.insert(big);
@@ -137,23 +143,25 @@
     //orbit controls
     var controls = new OrbitControls(camera, renderer.domElement);
 
+    const boxSize = 100; //range for the octree to search for boids
     var Update = function () {
       renderer.render(scene, camera);
       controls.update();
-      const awarenessRange = 100;
 
-      /*do update stuff*/
+      //loop through every boid to update its values
       for (let i = 0; i < boids.length; i++) {
+        //create new search area for the octree
         let search = new Box(
-          boids[i].position.x - awarenessRange,
-          boids[i].position.y - awarenessRange,
-          boids[i].position.z - awarenessRange,
-          awarenessRange * 2,
-          awarenessRange * 2,
-          awarenessRange * 2);
-        let q = octree.query(search);
-        boids[i].flock(q);
-        boids[i].update();
+          boids[i].position.x - boxSize,
+          boids[i].position.y - boxSize,
+          boids[i].position.z - boxSize,
+          boxSize * 2,
+          boxSize * 2,
+          boxSize * 2,
+        );
+        let q = octree.query(search); //create a new list of boids within this one's box
+        boids[i].flock(q); //run algorithm on this boid using its surroundings boids
+        boids[i].update(); //update this boid's position
       }
 
       requestAnimationFrame(Update);
