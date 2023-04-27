@@ -103,7 +103,7 @@
       10);
 
     //creates 2000 normal 'blue' boids
-    for (let i = 0; i < 1000; i++) {
+    for (let i = 0; i < 1700; i++) {
       let boid = new Boid(
         0, //id
         0.02, //cohesian amount 0 - 1
@@ -143,7 +143,7 @@
     //orbit controls
     var controls = new OrbitControls(camera, renderer.domElement);
 
-    const boxSize = 100; //range for the octree to search for boids
+    const boxSize = 50; //range for the octree to search for boids
     var Update = function () {
       renderer.render(scene, camera);
       controls.update();
