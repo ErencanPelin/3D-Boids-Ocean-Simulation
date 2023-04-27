@@ -1,5 +1,5 @@
 # 3D Boids Ocean Simulation
-Contributors: Stephen, Michael, Nathan, Erencan
+Contributors: [Stephen](https://github.com/stephenrobxrts), [Nathan](https://github.com/DoMessWithProfile), [Michael](https://github.com/Unizzu), [Erencan](https://github.com/ErencanPelin)
 
 ## Boids algorithm
 - uses octree spatial partitioning to optimise the simulation, can simulate up to 10k boids at 60fps
