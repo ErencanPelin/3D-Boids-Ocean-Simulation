@@ -54,7 +54,7 @@
     import { Boid } from './build/boids/boid.js';
     import { Octree } from './build/octree/octree.js';
     import { Box } from './build/octree/box.js';
-    import { BoidSettings } from './build/boids/boid.js';
+    import { BoidSettings } from './build/boids/boidSettings.js';
     import { OrbitControls } from './build/controls/OrbitControls.js';
     import * as dat from 'dat.gui';
 
@@ -103,7 +103,7 @@
       10);
 
     //creates 2000 normal 'blue' boids
-    for (let i = 0; i < 2000; i++) {
+    for (let i = 0; i < 1000; i++) {
       let boid = new Boid(
         0, //id
         0.02, //cohesian amount 0 - 1
@@ -119,7 +119,7 @@
       octree.insert(boid); //add the boid to the octree
     }
     //create 100 enemy 'red' boids
-    for (let i = 0; i < 100; i++) {
+    for (let i = 0; i < 70; i++) {
       let big = new Boid(
         1, //id (greater than 0 means it'll chase the blue boids)
         0.02,
