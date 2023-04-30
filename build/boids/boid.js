@@ -1,5 +1,6 @@
 import * as THREE from '../three.module.js';
 import { BoidSettings } from './boidSettings.js';
+import { PLYLoader } from '../loaders/PLYLoader.js';
 
 class Boid {
     constructor(
@@ -21,7 +22,7 @@ class Boid {
         this._separationAwareness = separationAwareness;
         this._awareness = awareness;
         this._color = color;
-
+        
         //spawn
         var xSpawn = ((BoidSettings.worldSize - 50) * Math.random()) - ((BoidSettings.worldSize * 0.5) - 25);
         var ySpawn = ((BoidSettings.worldSize - 50) * Math.random()) - ((BoidSettings.worldSize * 0.5) - 25);
@@ -38,9 +39,13 @@ class Boid {
         this.position.add(this.velocity); //update reference position
         this.velocity.add(this.acceleration);
         this.velocity.clampLength(-this._moveSpeed, this._moveSpeed); //clamp the length of the vector so it doesn't get faster than the movespeed
-        this.boidMesh.position.set(this.position.x, this.position.y, this.position.z); //update the mesh/object position in the scene
-
-        this.acceleration.set(0, 0, 0); //reset acceleration
+        if(this.boidMesh != null)
+        {
+            this.boidMesh.position.set(this.position.x, this.position.y, this.position.z); //update the mesh/object position in the scene
+            this.acceleration.set(0, 0, 0); //reset acceleration
+            var dir = new THREE.Vector3().copy(this.position).add(this.velocity);
+            this.boidMesh.lookAt(dir);
+        }
     }
 
     viewingAngle(other) {
@@ -206,14 +211,79 @@ class Boid {
         return avg;
     }
 
-    createBoid(scene) {
-        const boidGeometry = new THREE.SphereGeometry();
-        const boidMat = new THREE.MeshBasicMaterial();
-        boidMat.wireframe = true;
+    async createBoid(scene) {
+        //old boid creation
+        
+        // const boidGeometry = new THREE.SphereGeometry();
+        // const boidMat = new THREE.MeshBasicMaterial();
+        // boidMat.wireframe = true;
+        // boidMat.color = this._color;
+        // this.boidMesh = new THREE.Mesh(boidGeometry, boidMat);
+        // this.boidMesh.position.set(this.position.x, this.position.y, this.position.z);
+        // scene.add(this.boidMesh);
+
+        //creating boid via the fish ply model by Nathan
+
+        //initialise a new Ply loader
+        var loader = new PLYLoader();
+        var pos = new THREE.Vector3(this.position.x, this.position.y, this.position.z);
+      //  var mesh = this.boidMesh;
+
+        const boidMat = new THREE.MeshLambertMaterial();
+        //boidMat.wireframe = true;
         boidMat.color = this._color;
-        this.boidMesh = new THREE.Mesh(boidGeometry, boidMat);
-        this.boidMesh.position.set(this.position.x, this.position.y, this.position.z);
-        scene.add(this.boidMesh);
+        //load and create the mesh of the fish
+
+        var loader = new PLYLoader();
+        var promise = loader.loadAsync('../../models/fishe.ply');
+
+        var mesh;
+        await promise.then(function ( geometry ) {
+            //compute bounding box of fish geometry
+            geometry.computeBoundingBox();
+
+            //variables to resize and recenter mesh position
+            var center = new THREE.Vector3();
+            var size = new THREE.Vector3();
+            geometry.boundingBox.getCenter(center);
+            geometry.boundingBox.getSize(size);
+            geometry.rotateX(Math.PI / 2);
+            var min = geometry.boundingBox.min;
+
+            //transform and scale matrices
+            var sca = new THREE.Matrix4();
+            var tra = new THREE.Matrix4();
+
+            //apply transform and scale variables to matrices
+            var ScaleFact=7/size.length();
+            sca.makeScale(ScaleFact,ScaleFact,ScaleFact);
+            tra.makeTranslation (-center.x,-center.y,-min.z);
+
+            //make the mesh
+            mesh = new THREE.Mesh( geometry, boidMat );
+            
+            //apply matrices to mesh
+            mesh.applyMatrix4(tra);
+            mesh.applyMatrix4(sca);
+
+            //rotates the fish mesh to make it face towards the x axis
+            mesh.rotation.x = Math.PI/2;
+
+            //bring the mesh to its position
+            mesh.position.set(pos.x, pos.y, pos.z);
+            
+            //adds the fish mesh to scene
+        //    this.boidMesh = mesh;
+            scene.add( mesh );
+           // console.log(mesh);
+            //buildScene();
+           // console.log('PLY file loaded!');
+        }).catch();
+        
+        this.boidMesh = mesh;
+        //this.boidMesh = mesh;
+        //scene.add(this.boidMesh);
+        //console.log(mesh);
     }
 }
 
