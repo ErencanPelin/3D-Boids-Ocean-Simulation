@@ -22,7 +22,7 @@ class Boid {
         this._separationAwareness = separationAwareness;
         this._awareness = awareness;
         this._color = color;
-
+        
         //spawn
         var xSpawn = ((BoidSettings.worldSize - 50) * Math.random()) - ((BoidSettings.worldSize * 0.5) - 25);
         var ySpawn = ((BoidSettings.worldSize - 50) * Math.random()) - ((BoidSettings.worldSize * 0.5) - 25);
@@ -42,8 +42,9 @@ class Boid {
         if(this.boidMesh != null)
         {
             this.boidMesh.position.set(this.position.x, this.position.y, this.position.z); //update the mesh/object position in the scene
-
             this.acceleration.set(0, 0, 0); //reset acceleration
+            var dir = new THREE.Vector3().copy(this.position).add(this.velocity);
+            this.boidMesh.lookAt(dir);
         }
     }
 
@@ -210,7 +211,7 @@ class Boid {
         return avg;
     }
 
-    createBoid(scene) {
+    async createBoid(scene) {
         //old boid creation
         
         // const boidGeometry = new THREE.SphereGeometry();
@@ -226,16 +227,18 @@ class Boid {
         //initialise a new Ply loader
         var loader = new PLYLoader();
         var pos = new THREE.Vector3(this.position.x, this.position.y, this.position.z);
-        var mesh = this.boidMesh;
+      //  var mesh = this.boidMesh;
 
-        const boidMat = new THREE.MeshBasicMaterial();
-        boidMat.wireframe = true;
+        const boidMat = new THREE.MeshLambertMaterial();
+        //boidMat.wireframe = true;
         boidMat.color = this._color;
         //load and create the mesh of the fish
 
         var loader = new PLYLoader();
         var promise = loader.loadAsync('../../models/fishe.ply');
-        promise.then(function ( geometry ) {
+
+        var mesh;
+        await promise.then(function ( geometry ) {
             //compute bounding box of fish geometry
             geometry.computeBoundingBox();
 
@@ -244,6 +247,7 @@ class Boid {
             var size = new THREE.Vector3();
             geometry.boundingBox.getCenter(center);
             geometry.boundingBox.getSize(size);
+            geometry.rotateX(Math.PI / 2);
             var min = geometry.boundingBox.min;
 
             //transform and scale matrices
@@ -251,7 +255,7 @@ class Boid {
             var tra = new THREE.Matrix4();
 
             //apply transform and scale variables to matrices
-            var ScaleFact=20/size.length();
+            var ScaleFact=7/size.length();
             sca.makeScale(ScaleFact,ScaleFact,ScaleFact);
             tra.makeTranslation (-center.x,-center.y,-min.z);
 
@@ -269,16 +273,14 @@ class Boid {
             mesh.position.set(pos.x, pos.y, pos.z);
             
             //adds the fish mesh to scene
+        //    this.boidMesh = mesh;
             scene.add( mesh );
-            console.log(mesh);
+           // console.log(mesh);
             //buildScene();
-            console.log('PLY file loaded!');
-        }).catch(failureCallback);
-
-        function failureCallback(){
-            console.log('Could not load PLY file!');
-        }
+           // console.log('PLY file loaded!');
+        }).catch();
         
+        this.boidMesh = mesh;
         //this.boidMesh = mesh;
         //scene.add(this.boidMesh);
         //console.log(mesh);
