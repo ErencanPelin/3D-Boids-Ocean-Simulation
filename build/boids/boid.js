@@ -236,33 +236,41 @@ class Boid {
         var loader = new PLYLoader();
         var promise = loader.loadAsync('../../models/fishe.ply');
         promise.then(function ( geometry ) {
+            //compute bounding box of fish geometry
             geometry.computeBoundingBox();
 
+            //variables to resize and recenter mesh position
             var center = new THREE.Vector3();
             var size = new THREE.Vector3();
             geometry.boundingBox.getCenter(center);
             geometry.boundingBox.getSize(size);
             var min = geometry.boundingBox.min;
 
+            //transform and scale matrices
             var sca = new THREE.Matrix4();
             var tra = new THREE.Matrix4();
 
+            //apply transform and scale variables to matrices
             var ScaleFact=20/size.length();
             sca.makeScale(ScaleFact,ScaleFact,ScaleFact);
             tra.makeTranslation (-center.x,-center.y,-min.z);
 
+            //make the mesh
             mesh = new THREE.Mesh( geometry, boidMat );
             
+            //apply matrices to mesh
             mesh.applyMatrix4(tra);
             mesh.applyMatrix4(sca);
-            //rotates the fish to make it face towards the x axis
+
+            //rotates the fish mesh to make it face towards the x axis
             mesh.rotation.x = Math.PI/2;
 
-            // bring the mesh to its position
+            //bring the mesh to its position
             mesh.position.set(pos.x, pos.y, pos.z);
             
+            //adds the fish mesh to scene
             scene.add( mesh );
-            console.log(mesh.position);
+            console.log(mesh);
             //buildScene();
             console.log('PLY file loaded!');
         }).catch(failureCallback);
@@ -270,45 +278,10 @@ class Boid {
         function failureCallback(){
             console.log('Could not load PLY file!');
         }
-        // loader.load('../models/fishe.ply', function ( geometry )
-        // {
-        //     //geometry.computeVertexNormals();
-        //     geometry.computeBoundingBox();
-
-        //     var center = new THREE.Vector3();
-        //     var size = new THREE.Vector3();
-        //     geometry.boundingBox.getCenter(center);
-        //     geometry.boundingBox.getSize(size);
-        //     var min = geometry.boundingBox.min;
-
-        //     var sca = new THREE.Matrix4();
-        //     var tra = new THREE.Matrix4();
-
-        //     var ScaleFact=50/size.length();
-        //     sca.makeScale(ScaleFact,ScaleFact,ScaleFact);
-        //     //tra.makeTranslation (-center.x,-center.y,-min.z);
-        //     tra.makeTranslation (-center.x,-center.y,-min.z);
-            
-        //     //apply the geometry and material to the mesh
-        //     var fishMesh = new THREE.Mesh(geometry, boidMat);
-
-        //     //apply the readjusting matrices
-        //     fishMesh.applyMatrix4(tra);
-        //     fishMesh.applyMatrix4(sca);
-
-        //     //rotates the fish to make it face towards the x axis
-        //     fishMesh.rotation.x = Math.PI/2;
-
-        //     // bring the mesh to its position
-        //     fishMesh.position.set(position);
-        //     mesh = fishMesh;
-        //     scene.add(mesh);
-        //     //console.log(this.boidMesh);
-        // } );
         
         //this.boidMesh = mesh;
         //scene.add(this.boidMesh);
-        console.log(mesh);
+        //console.log(mesh);
     }
 }
 
