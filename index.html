@@ -147,7 +147,7 @@
     //add shark (done by Nathan)
 
     //shark texture
-    var sharkTexture = new THREE.TextureLoader().load('./models/sharktexture.png');
+    var sharkTexture = new THREE.TextureLoader().load('./models/sharktexturegrey.png');
     //shark material
     var sharkMaterial = new THREE.MeshPhongMaterial();
     sharkMaterial.map = sharkTexture;
@@ -174,7 +174,7 @@
             var tra = new THREE.Matrix4();
 
             //apply transform and scale variables to matrices
-            var ScaleFact=100/size.length();
+            var ScaleFact=50/size.length();
             sca.makeScale(ScaleFact,ScaleFact,ScaleFact);
             tra.makeTranslation (-center.x,-center.y,-min.z);
 
