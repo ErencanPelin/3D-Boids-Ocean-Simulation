@@ -56,6 +56,7 @@
     import { Box } from './build/octree/box.js';
     import { BoidSettings } from './build/boids/boidSettings.js';
     import { OrbitControls } from './build/controls/OrbitControls.js';
+    import { PLYLoader } from './build/loaders/PLYLoader.js';
     import * as dat from 'dat.gui';
 
     //create the scene
@@ -142,6 +143,60 @@
     
     const ambientLight = new THREE.AmbientLight(0x113144, 1);
     scene.add(ambientLight);
+
+    //add shark (done by Nathan)
+
+    //shark texture
+    var sharkTexture = new THREE.TextureLoader().load('./models/sharktexture.png');
+    //shark material
+    var sharkMaterial = new THREE.MeshPhongMaterial();
+    sharkMaterial.map = sharkTexture;
+    sharkMaterial.side = THREE.DoubleSide;
+    //load shark model
+    var sharkLoader = new PLYLoader();
+        var loadPromise = sharkLoader.loadAsync('./models/lesharke.ply');
+
+        var sharkMesh;
+        await loadPromise.then(function ( geometry ) {
+            //compute bounding box of shark geometry
+            geometry.computeBoundingBox();
+
+            //variables to resize and recenter mesh position
+            var center = new THREE.Vector3();
+            var size = new THREE.Vector3();
+            geometry.boundingBox.getCenter(center);
+            geometry.boundingBox.getSize(size);
+            geometry.rotateX(Math.PI / 2);
+            var min = geometry.boundingBox.min;
+
+            //transform and scale matrices
+            var sca = new THREE.Matrix4();
+            var tra = new THREE.Matrix4();
+
+            //apply transform and scale variables to matrices
+            var ScaleFact=100/size.length();
+            sca.makeScale(ScaleFact,ScaleFact,ScaleFact);
+            tra.makeTranslation (-center.x,-center.y,-min.z);
+
+            //make the mesh
+            sharkMesh = new THREE.Mesh( geometry, sharkMaterial );
+            
+            //apply matrices to mesh
+            sharkMesh.applyMatrix4(tra);
+            sharkMesh.applyMatrix4(sca);
+
+            //rotates the shark mesh to make it face sideways
+            sharkMesh.rotation.x = Math.PI;
+            sharkMesh.rotation.y = Math.PI/2;
+
+            //bring the mesh to its position
+            sharkMesh.position.set(0,0,0);
+            
+            //adds the shark mesh to scene
+            scene.add( sharkMesh );
+        }).catch();
+        
+        //this.boidMesh = mesh;
 
     //orbit controls
     var controls = new OrbitControls(camera, renderer.domElement);
