@@ -14,13 +14,13 @@ class Boid {
         color) {
 
         //set values
-        this._id = id;
-        this._cohesion = cohesion;
-        this._separation = separation;
-        this._alignment = alignment;
-        this._moveSpeed = moveSpeed;
-        this._separationAwareness = separationAwareness;
-        this._awareness = awareness;
+        this._id = id; //don't change this value, don't store in a property, keep this hardcoded, add this to the property
+        this._cohesion = cohesion; //value between 0 and 1, float, add this to the property
+        this._separation = separation; //value between 0 and 1, float, add this to the property
+        this._alignment = alignment; //value between 0 and 1, float, add this to the property
+        this._moveSpeed = moveSpeed; //any value, add this value to the property
+        this._separationAwareness = separationAwareness; //add this value to the property
+        this._awareness = awareness; //add this value to the property
         this._color = color;
         
         //spawn
