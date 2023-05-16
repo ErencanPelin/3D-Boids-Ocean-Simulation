@@ -54,7 +54,7 @@
     import { Boid } from './build/boids/boid.js';
     import { Octree } from './build/octree/octree.js';
     import { Box } from './build/octree/box.js';
-    import { BoidSettings } from './build/boids/boid.js';
+    import { BoidSettings } from './build/boids/boidSettings.js';
     import { OrbitControls } from './build/controls/OrbitControls.js';
     import * as dat from 'dat.gui';
 
@@ -106,9 +106,9 @@
     for (let i = 0; i < 2000; i++) {
       let boid = new Boid(
         0, //id
-        0.02, //cohesian amount 0 - 1
-        0.15, //separation amount 0 - 1
-        0.02, //alignment amount 0 - 1
+        0.05, //cohesian amount 0 - 1
+        0.3, //separation amount 0 - 1
+        0.05, //alignment amount 0 - 1
         0.8, //movespeed
         3, //separation awareness
         25, //awareness
@@ -119,12 +119,12 @@
       octree.insert(boid); //add the boid to the octree
     }
     //create 100 enemy 'red' boids
-    for (let i = 0; i < 100; i++) {
+    for (let i = 0; i < 70; i++) {
       let big = new Boid(
         1, //id (greater than 0 means it'll chase the blue boids)
-        0.02,
+        0.05,
         0.5,
-        0.02,
+        0.1,
         0.4,
         3,
         50,
@@ -136,14 +136,17 @@
     }
 
     //add light
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+    const directionalLight = new THREE.DirectionalLight(0xaaaadd, 1);
     directionalLight.position.set(50, 100, 50);
     scene.add(directionalLight);
+    
+    const ambientLight = new THREE.AmbientLight(0x113144, 1);
+    scene.add(ambientLight);
 
     //orbit controls
     var controls = new OrbitControls(camera, renderer.domElement);
 
-    const boxSize = 100; //range for the octree to search for boids
+    const boxSize = 50; //range for the octree to search for boids
     var Update = function () {
       renderer.render(scene, camera);
       controls.update();
