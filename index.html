@@ -143,6 +143,21 @@
     const ambientLight = new THREE.AmbientLight(0x113144, 1);
     scene.add(ambientLight);
 
+    //shaders
+    const vertexShader = 
+      `// Vertex shader code here`
+    ;
+
+    const fragmentShader = 
+      `// Fragment shader code here`
+    ;
+
+    const shaderMaterial = new THREE.ShaderMaterial({
+      vertexShader: vertexShader,
+      fragmentShader: fragmentShader
+    });
+
+
     //orbit controls
     var controls = new OrbitControls(camera, renderer.domElement);
 
