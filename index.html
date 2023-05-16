@@ -55,6 +55,7 @@
     import { Octree } from './build/octree/octree.js';
     import { Box } from './build/octree/box.js';
     import { BoidSettings } from './build/boids/boidSettings.js';
+    import { RGBELoader } from "./build/loaders/RGBELoader.js";
     import { OrbitControls } from './build/controls/OrbitControls.js';
     import * as dat from 'dat.gui';
 
@@ -66,7 +67,19 @@
     camera.position.set(0, 0, 500);
     camera.lookAt(0, 0, 1);
 
+    new RGBELoader()
+      .load("./skybox/underwater.hdr", function (texture) {
+        texture.mapping = THREE.EquirectangularReflectionMapping;
+        scene.background = texture;
+        scene.environment = texture;
+        });
+
     var renderer = new THREE.WebGLRenderer();
+
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 0.6;
+    renderer.outputEncoding = THREE.sRGBEncoding;
+
     renderer.setSize(window.innerWidth, window.innerHeight);
     document.body.appendChild(renderer.domElement);
 
