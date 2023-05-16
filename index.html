@@ -48,7 +48,26 @@
 				}
 			}
 		</script>
+  
+  <!-- Shaders -->
+  <script id="vertexShader" type="x-shader/x-vertex">
+    varying vec3 vColor;
 
+    void main() {
+      vColor = normalize(position.xyz);
+      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    }
+  </script>
+
+  <script id="fragmentShader" type="x-shader/x-fragment">
+    varying vec3 vColor;
+
+    void main() {
+      gl_FragColor = vec4(vColor, 1.0);
+    }
+  </script>
+
+  <!-- Main Script -->
   <script type="module">
     import * as THREE from 'three';
     import { Boid } from './build/boids/boid.js';
@@ -61,25 +80,31 @@
     //create the scene
     var scene = new THREE.Scene();
     var ratio = window.innerWidth / window.innerHeight;
-
+    
     var camera = new THREE.PerspectiveCamera(45, ratio, 0.1, 1000);
     camera.position.set(0, 0, 500);
     camera.lookAt(0, 0, 1);
-
+    
     var renderer = new THREE.WebGLRenderer();
     renderer.setSize(window.innerWidth, window.innerHeight);
     document.body.appendChild(renderer.domElement);
+    
+    //shader material
+    const shaderMaterial = new THREE.ShaderMaterial({
+      vertexShader: document.getElementById( 'vertexShader' ).textContent,
+      fragmentShader: document.getElementById( 'fragmentShader' ).textContent
+    });
 
     /* //#region GUI
- 
-     //GUI
-     const gui = new dat.GUI();
-     const settingsFolder = gui.addFolder('Boid Settings');
-     settingsFolder.add(BoidSettings, 'moveSpeed', 0, 10);
-     settingsFolder.add(BoidSettings, 'awareness', 0, 100);
-     settingsFolder.add(BoidSettings, 'cohesion', 0, 1);
-     settingsFolder.add(BoidSettings, 'separation', 0, 1);
-     settingsFolder.add(BoidSettings, 'separationAwareness', 0, 50);
+    
+    //GUI
+    const gui = new dat.GUI();
+    const settingsFolder = gui.addFolder('Boid Settings');
+    settingsFolder.add(BoidSettings, 'moveSpeed', 0, 10);
+    settingsFolder.add(BoidSettings, 'awareness', 0, 100);
+    settingsFolder.add(BoidSettings, 'cohesion', 0, 1);
+    settingsFolder.add(BoidSettings, 'separation', 0, 1);
+    settingsFolder.add(BoidSettings, 'separationAwareness', 0, 50);
      settingsFolder.add(BoidSettings, 'alignment', 0, 1);
      settingsFolder.add(BoidSettings, 'worldSize', 10, 50);
      settingsFolder.open();
@@ -87,13 +112,13 @@
 
     //create box wireframe Geometry and add to scene to visualise the world area
     const boundsGeometry = new THREE.BoxGeometry(BoidSettings.worldSize, BoidSettings.worldSize, BoidSettings.worldSize);
-    var boxMat = new THREE.MeshBasicMaterial();
-    boxMat.color = new THREE.Color(0, 0.8, 1);
-    boxMat.wireframe = true;
-    const boxMesh = new THREE.Mesh(boundsGeometry, boxMat);
+    // var boxMat = new THREE.MeshBasicMaterial();
+    // boxMat.color = new THREE.Color(0, 0.8, 1);
+    // boxMat.wireframe = true;
+    const boxMesh = new THREE.Mesh(boundsGeometry, shaderMaterial)
     boxMesh.position.set(0, 0, 0);
     scene.add(boxMesh);
-
+    
     var boids = []; //list of all active boids in the simulation
     //boids octree, used for spacial partitioning and boid-neighbour comparison optimisation
     const octree = new Octree(
@@ -142,20 +167,6 @@
     
     const ambientLight = new THREE.AmbientLight(0x113144, 1);
     scene.add(ambientLight);
-
-    //shaders
-    const vertexShader = 
-      `// Vertex shader code here`
-    ;
-
-    const fragmentShader = 
-      `// Fragment shader code here`
-    ;
-
-    const shaderMaterial = new THREE.ShaderMaterial({
-      vertexShader: vertexShader,
-      fragmentShader: fragmentShader
-    });
 
 
     //orbit controls
