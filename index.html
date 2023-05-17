@@ -43,14 +43,12 @@
   <script type="importmap">
 			{
 				"imports": {
-					"three": "./build/three.module.js",
-					"dat.gui": "./node_modules/dat.gui/build/dat.gui.module.js"
+					"three": "./build/three.module.js"
 				}
 			}
 	</script>
 
-  
-  <script src="https://cdn.jsdelivr.net/npm/lil-gui@0.18"></script>
+    <script src="https://cdn.jsdelivr.net/npm/lil-gui@0.18"></script>
   <script>
     var GUI = lil.GUI;
   </script>
@@ -61,9 +59,10 @@
     import { Octree } from './build/octree/octree.js';
     import { Box } from './build/octree/box.js';
     import { BoidSettings } from './build/boids/boidSettings.js';
+    import { BlueProperty } from './build/boids/boidSettings.js';
+    import { RedProperty } from './build/boids/boidSettings.js';
     import { RGBELoader } from "./build/loaders/RGBELoader.js";
     import { OrbitControls } from './build/controls/OrbitControls.js';
-    import * as dat from 'dat.gui';
 
     //create the scene
     var scene = new THREE.Scene();
@@ -159,11 +158,14 @@
     .onChange(value => {
       // Update property value here
     })
-    blueFishFolder.add(obj, "blueMovespeed", 0, 1, 0.1)
+    blueFishFolder.add(obj, "blueMovespeed", 0.1, 10, 0.1)
     .name("Move Speed")
     .listen()
     .onChange(value => {
       // Update property value here
+      BlueProperty.moveSpeed = value;
+      
+      console.log(BlueProperty.moveSpeed);
     })
     blueFishFolder.add(obj, "blueSeparationAwareness", 3, 10, 0.1)
     .name("Separation Awareness")
@@ -260,7 +262,6 @@
     //   movespeed: 0.8,
     //   separationAwareness: 3,
     //   awareness: 25,
-    //   colour: new THREE.Color(0, 1, 1)
     // }
 
 // for (let i = 0; i < 2000; i++) {
@@ -280,33 +281,39 @@
 //}
 
 
+  
     //creates 2000 normal 'blue' boids
     for (let i = 0; i < 2000; i++) {
       let boid = new Boid(
         0, //id
-        0.05, //cohesian amount 0 - 1
-        0.3, //separation amount 0 - 1
-        0.05, //alignment amount 0 - 1
-        0.8, //movespeed
-        3, //separation awareness
-        25, //awareness
-        new THREE.Color(0, 1, 1), //boid color
+        // 0.05, //cohesian amount 0 - 1
+        // 0.3, //separation amount 0 - 1
+        // 0.05, //alignment amount 0 - 1
+        // BlueProperty,   //0.8, //movespeed
+        // 3, //separation awareness
+        // 25, //awareness
+        BlueProperty,
+        new THREE.Color(0, 1, 1) //boid color
       );
       boid.createBoid(scene); //render the boid
       boids.push(boid); //add the boid to the list
       octree.insert(boid); //add the boid to the octree
     }
+
+    //console.log(BlueProperty.movespeed);
+
     //create 100 enemy 'red' boids
     for (let i = 0; i < 70; i++) {
       let big = new Boid(
         1, //id (greater than 0 means it'll chase the blue boids)
-        0.05,
-        0.5,
-        0.1,
-        0.4,
-        3,
-        50,
-        new THREE.Color(1, 0, 0),
+        // 0.05,
+        // 0.5,
+        // 0.1,
+        // 0.4,
+        // 3,
+        // 50,
+        RedProperty,
+        new THREE.Color(1, 0, 0)
       );
       big.createBoid(scene);
       boids.push(big);
@@ -343,6 +350,11 @@
         let q = octree.query(search); //create a new list of boids within this one's box
         boids[i].flock(q); //run algorithm on this boid using its surroundings boids
         boids[i].update(); //update this boid's position
+        // console.log(boids[i].valueReference.movespeed);
+        // console.log(boids[i].id);
+        // console.log(boids[i].color);
+        // console.log(boids[i].valueReference.cohesion);
+      
       }
 
       requestAnimationFrame(Update);
