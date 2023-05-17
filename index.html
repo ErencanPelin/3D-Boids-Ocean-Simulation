@@ -51,19 +51,22 @@
   
   <!-- Shaders -->
   <script id="vertexShader" type="x-shader/x-vertex">
-    varying vec3 vColor;
+    varying vec3 vertexColor;
 
     void main() {
-      vColor = normalize(position.xyz);
+      vertexColor = normalize(position.xyz);
       gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
     }
   </script>
 
   <script id="fragmentShader" type="x-shader/x-fragment">
-    varying vec3 vColor;
+    uniform float time;
+    varying vec3 vertexColor;
 
     void main() {
-      gl_FragColor = vec4(vColor, 1.0);
+        float sinValue = 0.1 * sin(gl_FragCoord.x) + 0.1 * cos(gl_FragCoord.y) + tan(gl_FragCoord.x + gl_FragCoord.y);
+        vec3 color = vertexColor + vec3(sinValue);
+        gl_FragColor = vec4(color, 1.0);
     }
   </script>
 
@@ -91,8 +94,10 @@
     
     //shader material
     const shaderMaterial = new THREE.ShaderMaterial({
+      fog: false,
+      wireframe: false,
       vertexShader: document.getElementById( 'vertexShader' ).textContent,
-      fragmentShader: document.getElementById( 'fragmentShader' ).textContent
+      fragmentShader: document.getElementById( 'fragmentShader' ).textContent,
     });
 
     /* //#region GUI
@@ -114,7 +119,7 @@
     const boundsGeometry = new THREE.BoxGeometry(BoidSettings.worldSize, BoidSettings.worldSize, BoidSettings.worldSize);
     // var boxMat = new THREE.MeshBasicMaterial();
     // boxMat.color = new THREE.Color(0, 0.8, 1);
-    // boxMat.wireframe = true;
+    //boxMat.wireframe = true;
     const boxMesh = new THREE.Mesh(boundsGeometry, shaderMaterial)
     boxMesh.position.set(0, 0, 0);
     scene.add(boxMesh);
