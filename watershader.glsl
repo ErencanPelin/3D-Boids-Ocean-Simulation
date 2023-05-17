@@ -28,3 +28,24 @@ void main() {
     vec3 color = vertexColor + vec3(sinValue);
     gl_FragColor = vec4(color, 1.0);
 }
+
+// Archive ///////////////////////////////////////////////////////
+
+// Basic Shader (Rainbow)
+
+<script id="vertexShader" type="x-shader/x-vertex">
+    varying vec3 vertexColor;
+
+    void main() {
+      vertexColor = normalize(position.xyz);
+      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    }
+</script>
+
+<script id="fragmentShader" type="x-shader/x-fragment">
+    varying vec3 vertexColor;
+
+    void main() {
+      gl_FragColor = vec4(vertexColor, 1.0);
+    }
+</script>

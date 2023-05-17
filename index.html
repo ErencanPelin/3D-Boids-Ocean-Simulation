@@ -60,17 +60,13 @@
   </script>
 
   <script id="fragmentShader" type="x-shader/x-fragment">
-    uniform float time;
     varying vec3 vertexColor;
 
     void main() {
-        float sinValue = 0.1 * sin(gl_FragCoord.x) + 0.1 * cos(gl_FragCoord.y) + tan(gl_FragCoord.x + gl_FragCoord.y);
-        vec3 color = vertexColor + vec3(sinValue);
-        gl_FragColor = vec4(color, 1.0);
+      gl_FragColor = vec4(vertexColor, 1.0);
     }
   </script>
 
-  <!-- Main Script -->
   <script type="module">
     import * as THREE from 'three';
     import { Boid } from './build/boids/boid.js';
