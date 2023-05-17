@@ -90,22 +90,6 @@
     renderer.setSize(window.innerWidth, window.innerHeight);
     document.body.appendChild(renderer.domElement);
 
-    /* //#region GUI
- 
-     //GUI
-     const gui = new dat.GUI();
-     const settingsFolder = gui.addFolder('Boid Settings');
-     settingsFolder.add(BoidSettings, 'moveSpeed', 0, 10);
-     settingsFolder.add(BoidSettings, 'awareness', 0, 100);
-     settingsFolder.add(BoidSettings, 'cohesion', 0, 1);
-     settingsFolder.add(BoidSettings, 'separation', 0, 1);
-     settingsFolder.add(BoidSettings, 'separationAwareness', 0, 50);
-     settingsFolder.add(BoidSettings, 'alignment', 0, 1);
-     settingsFolder.add(BoidSettings, 'worldSize', 10, 50);
-     settingsFolder.open();
-     //#endregion*/
-
-
     // Create GUI
     const gui = new GUI().title("Fish Controls");
 
@@ -129,63 +113,63 @@
       resetAllFish: function() {},
     }
 
-    // 0, //id
-    //     0.05, //cohesian amount 0 - 1
-    //     0.3, //separation amount 0 - 1
-    //     0.05, //alignment amount 0 - 1
-    //     0.8, //movespeed
-    //     3, //separation awareness
-    //     25, //awareness
-    //     new THREE.Color(0, 1, 1), //boid color
-
     const blueFishFolder = gui.addFolder("Blue Fish Settings");
 
     blueFishFolder.add(obj, "blueCohesion", 0, 1, 0.01)
     .name("Cohesion")
     .listen()
     .onChange(value => {
-      // Update property value here
+      // Update cohesion value 
+      BlueProperty.cohesion = value;
     })
     blueFishFolder.add(obj, "blueSeparation", 0, 1, 0.01)
     .name("Separation")
     .listen()
     .onChange(value => {
-      // Update property value here
+      // Update separation value 
+      BlueProperty.separation = value;
     })
     blueFishFolder.add(obj, "blueAlignment", 0, 1, 0.01)
     .name("Alignment")
     .listen()
     .onChange(value => {
-      // Update property value here
+      // Update alignment value 
+      BlueProperty.alignment = value;
     })
-    blueFishFolder.add(obj, "blueMovespeed", 0.1, 10, 0.1)
+    blueFishFolder.add(obj, "blueMovespeed", 0.1, 3, 0.1)
     .name("Move Speed")
     .listen()
     .onChange(value => {
-      // Update property value here
+      // Update moveSpeed value 
       BlueProperty.moveSpeed = value;
-      
-      console.log(BlueProperty.moveSpeed);
     })
     blueFishFolder.add(obj, "blueSeparationAwareness", 3, 10, 0.1)
     .name("Separation Awareness")
     .listen()
     .onChange(value => {
-      // Update property value here
+      // Update separationAwareness value 
+      BlueProperty.separationAwareness = value;
     })
 
     blueFishFolder.add(obj, "blueAwareness", 0, 50, 0.1)
     .name("Awareness")
     .listen()
     .onChange(value => {
-      // Update property value here
+      // Update awareness value
+      BlueProperty.awareness = value;
     })
 
     blueFishFolder.add(obj, "resetBlueFish")
     .name("Reset Blue Fish")
-    //.listen()
+    .listen()
     .onChange(value => {
-      // Update property values here
+      // Reset GUI sliders and property values to default
+      obj.blueCohesion = BlueProperty.cohesion = 0.05,
+      obj.blueSeparation = BlueProperty.separation = 0.3,
+      obj.blueAlignment = BlueProperty.alignment = 0.05,
+      obj.blueMovespeed = BlueProperty.moveSpeed = 0.8,
+      obj.blueSeparationAwareness = BlueProperty.separationAwareness = 3,
+      obj.blueAwareness = BlueProperty.awareness = 25
     })
 
     const redFishFolder = gui.addFolder("Red Fish Settings");
@@ -194,45 +178,57 @@
     .name("Cohesion")
     .listen()
     .onChange(value => {
-      // Update property value here
+      // Update cohesion value
+      RedProperty.cohesion = value;
     })
     redFishFolder.add(obj, "redSeparation", 0, 1, 0.01)
     .name("Separation")
     .listen()
     .onChange(value => {
-      // Update property value here
+      // Update separation value
+      RedProperty.separation = value;
     })
     redFishFolder.add(obj, "redAlignment", 0, 1, 0.01)
     .name("Alignment")
     .listen()
     .onChange(value => {
-      // Update property value here
+      // Update alignment value
+      RedProperty.alignment = value;
     })
-    redFishFolder.add(obj, "redMovespeed", 0, 1, 0.1)
+    redFishFolder.add(obj, "redMovespeed", 0.1, 3, 0.1)
     .name("Move Speed")
     .listen()
     .onChange(value => {
-      // Update property value here
+      // Update moveSpeed value
+      RedProperty.moveSpeed = value;
     })
     redFishFolder.add(obj, "redSeparationAwareness", 3, 10, 0.1)
     .name("Separation Awareness")
     .listen()
     .onChange(value => {
-      // Update property value here
+      // Update separationAwareness value
+      RedProperty.separationAwareness = value;
     })
 
     redFishFolder.add(obj, "redAwareness", 0, 50, 0.1)
     .name("Awareness")
     .listen()
     .onChange(value => {
-      // Update property value here
+      // Update awareness value
+      RedProperty.awareness = value;
     })
 
     redFishFolder.add(obj, "resetRedFish")
     .name("Reset Red Fish")
-    //.listen()
+    .listen()
     .onChange(value => {
-      // Update property values here
+      // Reset GUI sliders and property values to default
+      obj.redCohesion = RedProperty.cohesion = 0.05,
+      obj.redSeparation = RedProperty.separation = 0.3,
+      obj.redAlignment = RedProperty.alignment = 0.05,
+      obj.redMovespeed = RedProperty.moveSpeed = 0.8,
+      obj.redSeparationAwareness = RedProperty.separationAwareness = 3,
+      obj.redAwareness = RedProperty.awareness = 25
     })
 
 
@@ -252,69 +248,18 @@
         -BoidSettings.worldSize * 0.5, -BoidSettings.worldSize * 0.5, -BoidSettings.worldSize * 0.5,
         BoidSettings.worldSize * 0.5, BoidSettings.worldSize * 0.5, BoidSettings.worldSize * 0.5),
       10);
-
-
-
-    // var BlueProperty = {
-    //   cohesion: 0.05,
-    //   separation: 0.3,
-    //   alignment: 0.05,
-    //   movespeed: 0.8,
-    //   separationAwareness: 3,
-    //   awareness: 25,
-    // }
-
-// for (let i = 0; i < 2000; i++) {
-//       let boid = new Boid(
-//         0, //id
-//         BlueProperty.cohesion, //cohesian amount 0 - 1
-//         BlueProperty.separation, //separation amount 0 - 1
-//         BlueProperty.alignment, //alignment amount 0 - 1
-//         BlueProperty.movespeed, //movespeed
-//         BlueProperty.separationAwareness, //separation awareness
-//         BlueProperty.awareness, //awareness
-//         BlueProperty.colour, //boid color
-//       );
-//       boid.createBoid(scene); //render the boid
-//       boids.push(boid); //add the boid to the list
-//       octree.insert(boid); //add the boid to the octree
-//}
-
-
   
     //creates 2000 normal 'blue' boids
     for (let i = 0; i < 2000; i++) {
-      let boid = new Boid(
-        0, //id
-        // 0.05, //cohesian amount 0 - 1
-        // 0.3, //separation amount 0 - 1
-        // 0.05, //alignment amount 0 - 1
-        // BlueProperty,   //0.8, //movespeed
-        // 3, //separation awareness
-        // 25, //awareness
-        BlueProperty,
-        new THREE.Color(0, 1, 1) //boid color
-      );
+      let boid = new Boid(BlueProperty); // object containing blue fish values
       boid.createBoid(scene); //render the boid
       boids.push(boid); //add the boid to the list
       octree.insert(boid); //add the boid to the octree
     }
 
-    //console.log(BlueProperty.movespeed);
-
     //create 100 enemy 'red' boids
-    for (let i = 0; i < 70; i++) {
-      let big = new Boid(
-        1, //id (greater than 0 means it'll chase the blue boids)
-        // 0.05,
-        // 0.5,
-        // 0.1,
-        // 0.4,
-        // 3,
-        // 50,
-        RedProperty,
-        new THREE.Color(1, 0, 0)
-      );
+    for (let i = 0; i < 100; i++) {
+      let big = new Boid(RedProperty); //object containing red fish values
       big.createBoid(scene);
       boids.push(big);
       octree.insert(big);

@@ -1,52 +1,13 @@
 import * as THREE from '../three.module.js';
 import { BoidSettings } from './boidSettings.js';
-import { BlueProperty } from './boidSettings.js'; //not being used if in grey
-import { RedProperty } from './boidSettings.js'; //not being used if in grey
 import { PLYLoader } from '../loaders/PLYLoader.js';
 
 class Boid {
-    constructor(id, valueReference, color) {
-
-        // cohesion = 0.02,
-        // separation = 0.15,
-        // alignment = 0.02,
-        //moveSpeed = BlueProperty.movespeed,
-        // separationAwareness = 3,
-        // awareness = 50,
-
-
-        //console.log(valueReference.moveSpeed)
+    constructor(properties) {
 
         //set values
-        this._id = id; //don't change this value, don't store in a property, keep this hardcoded, add this to the property
-        // this._cohesion = BlueProperty.cohesion; //value between 0 and 1, float, add this to the property
-        // this._separation = BlueProperty.separation; //value between 0 and 1, float, add this to the property
-        // this._alignment = BlueProperty.alignment; //value between 0 and 1, float, add this to the property
-        // this._moveSpeed = BlueProperty.moveSpeed; //any value, add this value to the property
-        // this._separationAwareness = BlueProperty.separationAwareness; //add this value to the property
-        // this._awareness = BlueProperty.awareness; //add this value to the property
-        this.valueReference = valueReference;
-        this._color = color;
+        this.properties = properties;
 
-
-        //console.log(this.valueReference.moveSpeed);
-        console.log(this._id);
-        //console.log(this.color);
-        //console.log(this.valueReference.cohesion);
-
-
-
-
-
-        // this._id = id; //don't change this value, don't store in a property, keep this hardcoded, add this to the property
-        // this._cohesion = cohesion; //value between 0 and 1, float, add this to the property
-        // this._separation = separation; //value between 0 and 1, float, add this to the property
-        // this._alignment = alignment; //value between 0 and 1, float, add this to the property
-        // this._moveSpeed = moveSpeed; //any value, add this value to the property
-        // this._separationAwareness = separationAwareness; //add this value to the property
-        // this._awareness = awareness; //add this value to the property
-        // this._color = color;
-        
         //spawn
         var xSpawn = ((BoidSettings.worldSize - 50) * Math.random()) - ((BoidSettings.worldSize * 0.5) - 25);
         var ySpawn = ((BoidSettings.worldSize - 50) * Math.random()) - ((BoidSettings.worldSize * 0.5) - 25);
@@ -62,7 +23,7 @@ class Boid {
     update() {
         this.position.add(this.velocity); //update reference position
         this.velocity.add(this.acceleration);
-        this.velocity.clampLength(-this.valueReference.moveSpeed, this.valueReference.moveSpeed); //clamp the length of the vector so it doesn't get faster than the movespeed
+        this.velocity.clampLength(-this.properties.moveSpeed, this.properties.moveSpeed); //clamp the length of the vector so it doesn't get faster than the movespeed
         if(this.boidMesh != null)
         {
             this.boidMesh.position.set(this.position.x, this.position.y, this.position.z); //update the mesh/object position in the scene
@@ -101,8 +62,8 @@ class Boid {
             //the closer the other boids are, the more they should affect our direction
             let distance = this.position.distanceTo(other.position);
 
-            if (other != this && distance < this.valueReference.awareness && this.viewingAngle(other.position)) {
-                if (this._id >= other._id) { //don't align with enemy boids
+            if (other != this && distance < this.properties.awareness && this.viewingAngle(other.position)) {
+                if (this.properties.id >= other.properties.id) { //don't align with enemy boids
                     avg.add(other.velocity);
                     total++;
                 }
@@ -112,9 +73,9 @@ class Boid {
         //if we actually sampled any / if there are boids around us
         if (total > 0) { //if there are actually boids near us
             avg.divideScalar(total); //divide by the number of samples to find the average
-            avg.setLength(this.valueReference.moveSpeed);
+            avg.setLength(this.properties.moveSpeed);
             avg.sub(this.velocity); //subtract our current velocity so we gradually turn to face the average
-            avg.clampLength(-this.valueReference.alignment, this.valueReference.alignment); //clamp the length between our alignment constant
+            avg.clampLength(-this.properties.alignment, this.properties.alignment); //clamp the length between our alignment constant
         }
         return avg;
     }
@@ -127,8 +88,8 @@ class Boid {
         for (let other of boids) {
             let distance = this.position.distanceTo(other.position);
 
-            if (other != this && distance < this._awareness && this.viewingAngle(other.position)) {
-                if (this._id >= other._id) { //don't flock to enemy boids
+            if (other != this && distance < this.properties.awareness && this.viewingAngle(other.position)) {
+                if (this.properties.id >= other.properties.id) { //don't flock to enemy boids
                     avg.add(other.position);
                     total++;
                 }
@@ -138,9 +99,9 @@ class Boid {
         if (total > 0) { //if there are actually boids near us
             avg.divideScalar(total);
             avg.sub(this.position);
-            avg.setLength(this.valueReference.moveSpeed);
+            avg.setLength(this.properties.moveSpeed);
             avg.sub(this.velocity);
-            avg.clampLength(-this.valueReference.cohesion, this.valueReference.cohesion); //clamp length to constant
+            avg.clampLength(-this.properties.cohesion, this.properties.cohesion); //clamp length to constant
         }
         return avg;
     }
@@ -153,8 +114,8 @@ class Boid {
         for (let other of boids) {
             let distance = this.position.distanceTo(other.position); //move more if the other boid is closer
 
-            if (this._id >= other._id) {
-                if (other != this && distance < this.valueReference.separationAwareness && this.viewingAngle(other.position)) {
+            if (this.properties.id >= other.properties.id) {
+                if (other != this && distance < this.properties.separationAwareness && this.viewingAngle(other.position)) {
                     let diff = new THREE.Vector3().subVectors(this.position, other.position);
                     diff.divideScalar(distance);
                     avg.add(diff);
@@ -162,7 +123,7 @@ class Boid {
                 }
             }
             else { //move further away from enemy boids
-                if (other != this && distance < this.valueReference.separationAwareness * 6 && this.viewingAngle(other.position)) {
+                if (other != this && distance < this.properties.separationAwareness * 6 && this.viewingAngle(other.position)) {
                     let diff = new THREE.Vector3().subVectors(this.position, other.position);
                     diff.divideScalar(distance);
                     avg.add(diff);
@@ -173,9 +134,9 @@ class Boid {
 
         if (total > 0) { //if there are actually boids near us
             avg.divideScalar(total);
-            avg.setLength(this.valueReference.moveSpeed);
+            avg.setLength(this.properties.moveSpeed);
             avg.sub(this.velocity);
-            avg.clampLength(-this.valueReference.separation, this.valueReference.separation);
+            avg.clampLength(-this.properties.separation, this.properties.separation);
         }
         return avg;
     }
@@ -189,8 +150,8 @@ class Boid {
         for (let other of boids) {
             let distance = this.position.distanceTo(other.position);
 
-            if (other != this && distance < this.valueReference.separationAwareness * 10 && this.viewingAngle(other.position)) {
-                if (this._id < other._id) {
+            if (other != this && distance < this.properties.separationAwareness * 10 && this.viewingAngle(other.position)) {
+                if (this.properties.id < other.properties.id) {
                     avg.add(new THREE.Vector3()
                         .copy(this.velocity) //create new reference (so we don't overwrite)
                         .reflect( //point in the opposite direction
@@ -204,9 +165,9 @@ class Boid {
 
         if (total > 0) { //if there are actually boids near us
             avg.divideScalar(total);
-            avg.setLength(this.valueReference.moveSpeed);
+            avg.setLength(this.properties.moveSpeed);
             avg.sub(this.velocity);
-            avg.clampLength(-this.valueReference.separation, this.valueReference.separation);
+            avg.clampLength(-this.properties.separation, this.properties.separation);
         }
         return avg;
     }
@@ -230,8 +191,8 @@ class Boid {
         if (this.position.z + 20 >= BoidSettings.worldSize * 0.5)
             avg.setZ(-1);
 
-        avg.setLength(this.valueReference.moveSpeed);
-        avg.clampLength(-this.valueReference.alignment, this.valueReference.alignment);
+        avg.setLength(this.properties.moveSpeed);
+        avg.clampLength(-this.properties.alignment, this.properties.alignment);
         return avg;
     }
 
@@ -251,11 +212,11 @@ class Boid {
         //initialise a new Ply loader
         var loader = new PLYLoader();
         var pos = new THREE.Vector3(this.position.x, this.position.y, this.position.z);
-      //  var mesh = this.boidMesh;
+        //  var mesh = this.boidMesh;
 
         const boidMat = new THREE.MeshLambertMaterial();
         //boidMat.wireframe = true;
-        boidMat.color = this._color;
+        boidMat.color = this.properties.colour;
         //load and create the mesh of the fish
 
         var loader = new PLYLoader();
@@ -297,11 +258,11 @@ class Boid {
             mesh.position.set(pos.x, pos.y, pos.z);
             
             //adds the fish mesh to scene
-        //    this.boidMesh = mesh;
+            //this.boidMesh = mesh;
             scene.add( mesh );
-           // console.log(mesh);
+            //console.log(mesh);
             //buildScene();
-           // console.log('PLY file loaded!');
+            //console.log('PLY file loaded!');
         }).catch();
         
         this.boidMesh = mesh;
