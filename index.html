@@ -75,6 +75,7 @@
     import { BoidSettings } from './build/boids/boidSettings.js';
     import { RGBELoader } from "./build/loaders/RGBELoader.js";
     import { OrbitControls } from './build/controls/OrbitControls.js';
+    import { PLYLoader } from './build/loaders/PLYLoader.js';
     import * as dat from 'dat.gui';
 
     //create the scene
@@ -181,14 +182,112 @@
     const ambientLight = new THREE.AmbientLight(0x113144, 1);
     scene.add(ambientLight);
 
+    //add shark (done by Nathan)
+
+    //shark texture
+    var sharkTexture = new THREE.TextureLoader().load('./models/sharktexturegrey.png');
+    //shark material
+    var sharkMaterial = new THREE.MeshPhongMaterial();
+    sharkMaterial.map = sharkTexture;
+    sharkMaterial.side = THREE.DoubleSide;
+    //load shark model
+    var sharkLoader = new PLYLoader();
+        var loadPromise = sharkLoader.loadAsync('./models/lesharke.ply');
+
+        var sharkMesh;
+        await loadPromise.then(function ( geometry ) {
+            //compute bounding box of shark geometry
+            geometry.computeBoundingBox();
+
+            //variables to resize and recenter mesh position
+            var center = new THREE.Vector3();
+            var size = new THREE.Vector3();
+            geometry.boundingBox.getCenter(center);
+            geometry.boundingBox.getSize(size);
+            //geometry.rotateX(Math.PI / 2);
+            var min = geometry.boundingBox.min;
+
+            //transform and scale matrices
+            var sca = new THREE.Matrix4();
+            var tra = new THREE.Matrix4();
+
+            //apply transform and scale variables to matrices
+            var ScaleFact=50/size.length();
+            sca.makeScale(ScaleFact,ScaleFact,ScaleFact);
+            tra.makeTranslation (-center.x,-center.y,-min.z);
+
+            //make the mesh
+            sharkMesh = new THREE.Mesh( geometry, sharkMaterial );
+            
+            //apply matrices to mesh
+            sharkMesh.applyMatrix4(tra);
+            sharkMesh.applyMatrix4(sca);
+
+            //rotates the shark mesh to make it face sideways
+            //sharkMesh.rotation.x = Math.PI;
+            //sharkMesh.rotation.y = Math.PI/2;
+
+            //bring the mesh to its position
+            sharkMesh.position.set(0,0,0);
+            
+            //adds the shark mesh to scene
+            scene.add( sharkMesh );
+        }).catch();
+        
+        //this.boidMesh = mesh;
 
     //orbit controls
     var controls = new OrbitControls(camera, renderer.domElement);
+
+    //shark controls (done by nathan)
+
+    //shark speed
+    var sharkSpeed = 20;
+    //Clock to give time variables
+    var Clock= new THREE.Clock();
+
+    //bool values to activate when key is pressed
+    var moveForward=false;
+    var moveBackward=false;
+    var rotateLeft=false;
+    var rotateRight=false;
+    var rotateUp=false;
+    var rotateDown=false;
+
+    //function called when a key is pressed
+    var GetKeyDown = function(event)
+    {
+      switch (event.keyCode)
+      {
+        case 76:moveForward=true;break; //'L'
+        case 75:moveBackward=true;break; //'K'
+        case 65:rotateLeft=true;break; //'A'
+        case 68:rotateRight=true;break; //'D'
+        case 87:rotateUp=true;break; //'W'
+        case 83:rotateDown=true;break; //'S'
+      }  
+    }
+
+    //function called when a key is released
+    var GetKeyUp = function(event)
+    {
+      switch (event.keyCode)
+      {
+        case 76:moveForward=false;break;
+        case 75:moveBackward=false;break;
+        case 65:rotateLeft=false;break;
+        case 68:rotateRight=false;break;
+        case 87:rotateUp=false;break;
+        case 83:rotateDown=false;break;
+      }  
+    }
 
     const boxSize = 50; //range for the octree to search for boids
     var Update = function () {
       renderer.render(scene, camera);
       controls.update();
+      //ye olde reliable deltatime
+      var delta = Clock.getDelta();
 
       //loop through every boid to update its values
       for (let i = 0; i < boids.length; i++) {
@@ -206,6 +305,41 @@
         boids[i].update(); //update this boid's position
       }
 
+      //if the shark's model has been loaded, do movement things 
+      if(sharkMesh != null) 
+      {
+        if (moveForward)
+        {
+          //move forward based on the shark's local x axis
+          sharkMesh.translateX(sharkSpeed*delta);
+        }
+        if (moveBackward)
+        {
+          //move backward based on the shark's local x axis
+          sharkMesh.translateX(-sharkSpeed*delta);
+        }
+        if(rotateLeft)
+        {
+          //turn left
+          sharkMesh.rotation.y += Math.PI/2 * delta;
+        }
+        if(rotateRight)
+        {
+          //turn right
+          sharkMesh.rotation.y -= Math.PI/2 * delta;
+        }
+        if(rotateUp)
+        {
+          //turn upwards
+          sharkMesh.rotation.z += Math.PI/2 * delta;
+        }
+        if(rotateDown)
+        {
+          //turn downwards
+          sharkMesh.rotation.z -= Math.PI/2 * delta;
+        }
+      }
+      
       requestAnimationFrame(Update);
     };
 
@@ -223,6 +357,9 @@
 
     //link the resize of the window to the update of the camera
     window.addEventListener('resize', MyResize);
+
+    document.addEventListener('keydown',GetKeyDown,false);
+    document.addEventListener('keyup',GetKeyUp,false);
   </script>
 </body>
 
