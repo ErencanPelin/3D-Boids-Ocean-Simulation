@@ -73,6 +73,7 @@
     import { Octree } from './build/octree/octree.js';
     import { Box } from './build/octree/box.js';
     import { BoidSettings } from './build/boids/boidSettings.js';
+    import { RGBELoader } from "./build/loaders/RGBELoader.js";
     import { OrbitControls } from './build/controls/OrbitControls.js';
     import * as dat from 'dat.gui';
 
@@ -83,8 +84,19 @@
     var camera = new THREE.PerspectiveCamera(45, ratio, 0.1, 1000);
     camera.position.set(0, 0, 500);
     camera.lookAt(0, 0, 1);
-    
+    new RGBELoader()
+      .load("./skybox/underwater.hdr", function (texture) {
+        texture.mapping = THREE.EquirectangularReflectionMapping;
+        scene.background = texture;
+        scene.environment = texture;
+        });
+
     var renderer = new THREE.WebGLRenderer();
+
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 0.6;
+    renderer.outputEncoding = THREE.sRGBEncoding;
+
     renderer.setSize(window.innerWidth, window.innerHeight);
     document.body.appendChild(renderer.domElement);
     
@@ -129,12 +141,12 @@
       10);
 
     //creates 2000 normal 'blue' boids
-    for (let i = 0; i < 2000; i++) {
+    for (let i = 0; i < 1700; i++) {
       let boid = new Boid(
         0, //id
-        0.05, //cohesian amount 0 - 1
-        0.3, //separation amount 0 - 1
-        0.05, //alignment amount 0 - 1
+        0.02, //cohesian amount 0 - 1
+        0.15, //separation amount 0 - 1
+        0.02, //alignment amount 0 - 1
         0.8, //movespeed
         3, //separation awareness
         25, //awareness
