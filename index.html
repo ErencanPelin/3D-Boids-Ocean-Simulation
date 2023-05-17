@@ -91,7 +91,7 @@
     //shader material
     const shaderMaterial = new THREE.ShaderMaterial({
       fog: false,
-      wireframe: false,
+      wireframe: true, // For now, we'll stil use wireframe until we the textures on only one face
       vertexShader: document.getElementById( 'vertexShader' ).textContent,
       fragmentShader: document.getElementById( 'fragmentShader' ).textContent,
     });
