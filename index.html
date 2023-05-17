@@ -47,7 +47,13 @@
 					"dat.gui": "./node_modules/dat.gui/build/dat.gui.module.js"
 				}
 			}
-		</script>
+	</script>
+
+  
+  <script src="https://cdn.jsdelivr.net/npm/lil-gui@0.18"></script>
+  <script>
+    var GUI = lil.GUI;
+  </script>
 
   <script type="module">
     import * as THREE from 'three';
@@ -67,6 +73,7 @@
     camera.position.set(0, 0, 500);
     camera.lookAt(0, 0, 1);
 
+    // Import skybox image into program
     new RGBELoader()
       .load("./skybox/underwater.hdr", function (texture) {
         texture.mapping = THREE.EquirectangularReflectionMapping;
@@ -76,6 +83,7 @@
 
     var renderer = new THREE.WebGLRenderer();
 
+    // Setup skybox settings
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 0.6;
     renderer.outputEncoding = THREE.sRGBEncoding;
@@ -98,6 +106,134 @@
      settingsFolder.open();
      //#endregion*/
 
+
+    // Create GUI
+    const gui = new GUI().title("Fish Controls");
+
+    var obj = {
+      blueCohesion: 0.05,
+      blueSeparation: 0.3,
+      blueAlignment: 0.05,
+      blueMovespeed: 0.8,
+      blueSeparationAwareness: 3,
+      blueAwareness: 25,
+      resetBlueFish: function() {},
+
+      redCohesion: 0.05,
+      redSeparation: 0.3,
+      redAlignment: 0.05,
+      redMovespeed: 0.8,
+      redSeparationAwareness: 3,
+      redAwareness: 25,
+      resetRedFish: function() {},
+
+      resetAllFish: function() {},
+    }
+
+    // 0, //id
+    //     0.05, //cohesian amount 0 - 1
+    //     0.3, //separation amount 0 - 1
+    //     0.05, //alignment amount 0 - 1
+    //     0.8, //movespeed
+    //     3, //separation awareness
+    //     25, //awareness
+    //     new THREE.Color(0, 1, 1), //boid color
+
+    const blueFishFolder = gui.addFolder("Blue Fish Settings");
+
+    blueFishFolder.add(obj, "blueCohesion", 0, 1, 0.01)
+    .name("Cohesion")
+    .listen()
+    .onChange(value => {
+      // Update property value here
+    })
+    blueFishFolder.add(obj, "blueSeparation", 0, 1, 0.01)
+    .name("Separation")
+    .listen()
+    .onChange(value => {
+      // Update property value here
+    })
+    blueFishFolder.add(obj, "blueAlignment", 0, 1, 0.01)
+    .name("Alignment")
+    .listen()
+    .onChange(value => {
+      // Update property value here
+    })
+    blueFishFolder.add(obj, "blueMovespeed", 0, 1, 0.1)
+    .name("Move Speed")
+    .listen()
+    .onChange(value => {
+      // Update property value here
+    })
+    blueFishFolder.add(obj, "blueSeparationAwareness", 3, 10, 0.1)
+    .name("Separation Awareness")
+    .listen()
+    .onChange(value => {
+      // Update property value here
+    })
+
+    blueFishFolder.add(obj, "blueAwareness", 0, 50, 0.1)
+    .name("Awareness")
+    .listen()
+    .onChange(value => {
+      // Update property value here
+    })
+
+    blueFishFolder.add(obj, "resetBlueFish")
+    .name("Reset Blue Fish")
+    //.listen()
+    .onChange(value => {
+      // Update property values here
+    })
+
+    const redFishFolder = gui.addFolder("Red Fish Settings");
+
+    redFishFolder.add(obj, "redCohesion", 0, 1, 0.01)
+    .name("Cohesion")
+    .listen()
+    .onChange(value => {
+      // Update property value here
+    })
+    redFishFolder.add(obj, "redSeparation", 0, 1, 0.01)
+    .name("Separation")
+    .listen()
+    .onChange(value => {
+      // Update property value here
+    })
+    redFishFolder.add(obj, "redAlignment", 0, 1, 0.01)
+    .name("Alignment")
+    .listen()
+    .onChange(value => {
+      // Update property value here
+    })
+    redFishFolder.add(obj, "redMovespeed", 0, 1, 0.1)
+    .name("Move Speed")
+    .listen()
+    .onChange(value => {
+      // Update property value here
+    })
+    redFishFolder.add(obj, "redSeparationAwareness", 3, 10, 0.1)
+    .name("Separation Awareness")
+    .listen()
+    .onChange(value => {
+      // Update property value here
+    })
+
+    redFishFolder.add(obj, "redAwareness", 0, 50, 0.1)
+    .name("Awareness")
+    .listen()
+    .onChange(value => {
+      // Update property value here
+    })
+
+    redFishFolder.add(obj, "resetRedFish")
+    .name("Reset Red Fish")
+    //.listen()
+    .onChange(value => {
+      // Update property values here
+    })
+
+
     //create box wireframe Geometry and add to scene to visualise the world area
     const boundsGeometry = new THREE.BoxGeometry(BoidSettings.worldSize, BoidSettings.worldSize, BoidSettings.worldSize);
     var boxMat = new THREE.MeshBasicMaterial();
@@ -114,6 +250,35 @@
         -BoidSettings.worldSize * 0.5, -BoidSettings.worldSize * 0.5, -BoidSettings.worldSize * 0.5,
         BoidSettings.worldSize * 0.5, BoidSettings.worldSize * 0.5, BoidSettings.worldSize * 0.5),
       10);
+
+
+
+    // var BlueProperty = {
+    //   cohesion: 0.05,
+    //   separation: 0.3,
+    //   alignment: 0.05,
+    //   movespeed: 0.8,
+    //   separationAwareness: 3,
+    //   awareness: 25,
+    //   colour: new THREE.Color(0, 1, 1)
+    // }
+
+// for (let i = 0; i < 2000; i++) {
+//       let boid = new Boid(
+//         0, //id
+//         BlueProperty.cohesion, //cohesian amount 0 - 1
+//         BlueProperty.separation, //separation amount 0 - 1
+//         BlueProperty.alignment, //alignment amount 0 - 1
+//         BlueProperty.movespeed, //movespeed
+//         BlueProperty.separationAwareness, //separation awareness
+//         BlueProperty.awareness, //awareness
+//         BlueProperty.colour, //boid color
+//       );
+//       boid.createBoid(scene); //render the boid
+//       boids.push(boid); //add the boid to the list
+//       octree.insert(boid); //add the boid to the octree
+//}
+
 
     //creates 2000 normal 'blue' boids
     for (let i = 0; i < 2000; i++) {
