@@ -43,11 +43,33 @@
   <script type="importmap">
 			{
 				"imports": {
-					"three": "./build/three.module.js",
-					"dat.gui": "./node_modules/dat.gui/build/dat.gui.module.js"
+					"three": "./build/three.module.js"
 				}
 			}
-		</script>
+	</script>
+
+  <script src="https://cdn.jsdelivr.net/npm/lil-gui@0.18"></script>
+  <script>
+    var GUI = lil.GUI;
+  </script>
+
+  <!-- Shaders -->
+  <script id="vertexShader" type="x-shader/x-vertex">
+    varying vec3 vertexColor;
+
+    void main() {
+      vertexColor = normalize(position.xyz);
+      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    }
+  </script>
+
+  <script id="fragmentShader" type="x-shader/x-fragment">
+    varying vec3 vertexColor;
+
+    void main() {
+      gl_FragColor = vec4(vertexColor, 1.0);
+    }
+  </script>
 
   <script type="module">
     import * as THREE from 'three';
@@ -55,8 +77,12 @@
     import { Octree } from './build/octree/octree.js';
     import { Box } from './build/octree/box.js';
     import { BoidSettings } from './build/boids/boidSettings.js';
+    import { BlueProperty } from './build/boids/boidSettings.js';
+    import { RedProperty } from './build/boids/boidSettings.js';
+    import { RGBELoader } from "./build/loaders/RGBELoader.js";
     import { OrbitControls } from './build/controls/OrbitControls.js';
-    import * as dat from 'dat.gui';
+    import { PLYLoader } from './build/loaders/PLYLoader.js';
+   // import * as dat from 'dat.gui';
 
     //create the scene
     var scene = new THREE.Scene();
@@ -66,31 +92,179 @@
     camera.position.set(0, 0, 500);
     camera.lookAt(0, 0, 1);
 
+    // Import skybox image into program
+    new RGBELoader()
+      .load("./skybox/underwater.hdr", function (texture) {
+        texture.mapping = THREE.EquirectangularReflectionMapping;
+        scene.background = texture;
+        scene.environment = texture;
+      });
+
     var renderer = new THREE.WebGLRenderer();
+
+    // Setup skybox settings
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 0.6;
+    renderer.outputEncoding = THREE.sRGBEncoding;
+
     renderer.setSize(window.innerWidth, window.innerHeight);
     document.body.appendChild(renderer.domElement);
 
-    /* //#region GUI
- 
-     //GUI
-     const gui = new dat.GUI();
-     const settingsFolder = gui.addFolder('Boid Settings');
-     settingsFolder.add(BoidSettings, 'moveSpeed', 0, 10);
-     settingsFolder.add(BoidSettings, 'awareness', 0, 100);
-     settingsFolder.add(BoidSettings, 'cohesion', 0, 1);
-     settingsFolder.add(BoidSettings, 'separation', 0, 1);
-     settingsFolder.add(BoidSettings, 'separationAwareness', 0, 50);
-     settingsFolder.add(BoidSettings, 'alignment', 0, 1);
-     settingsFolder.add(BoidSettings, 'worldSize', 10, 50);
-     settingsFolder.open();
-     //#endregion*/
+    //shader material
+    const shaderMaterial = new THREE.ShaderMaterial({
+      fog: false,
+      wireframe: true, // For now, we'll stil use wireframe until we the textures on only one face
+      vertexShader: document.getElementById('vertexShader').textContent,
+      fragmentShader: document.getElementById('fragmentShader').textContent,
+    });
+
+    // Create GUI
+    const gui = new GUI().title("Fish Controls");
+
+    var obj = {
+      blueCohesion: 0.05,
+      blueSeparation: 0.3,
+      blueAlignment: 0.05,
+      blueMovespeed: 0.8,
+      blueSeparationAwareness: 3,
+      blueAwareness: 25,
+      resetBlueFish: function () { },
+
+      redCohesion: 0.05,
+      redSeparation: 0.3,
+      redAlignment: 0.05,
+      redMovespeed: 0.8,
+      redSeparationAwareness: 3,
+      redAwareness: 25,
+      resetRedFish: function () { },
+
+      resetAllFish: function () { },
+    }
+
+    const blueFishFolder = gui.addFolder("Blue Fish Settings");
+
+    blueFishFolder.add(obj, "blueCohesion", 0, 1, 0.01)
+      .name("Cohesion")
+      .listen()
+      .onChange(value => {
+        // Update cohesion value 
+        BlueProperty.cohesion = value;
+      })
+    blueFishFolder.add(obj, "blueSeparation", 0, 1, 0.01)
+      .name("Separation")
+      .listen()
+      .onChange(value => {
+        // Update separation value 
+        BlueProperty.separation = value;
+      })
+    blueFishFolder.add(obj, "blueAlignment", 0, 1, 0.01)
+      .name("Alignment")
+      .listen()
+      .onChange(value => {
+        // Update alignment value 
+        BlueProperty.alignment = value;
+      })
+    blueFishFolder.add(obj, "blueMovespeed", 0.1, 3, 0.1)
+      .name("Move Speed")
+      .listen()
+      .onChange(value => {
+        // Update moveSpeed value 
+        BlueProperty.moveSpeed = value;
+      })
+    blueFishFolder.add(obj, "blueSeparationAwareness", 3, 10, 0.1)
+      .name("Separation Awareness")
+      .listen()
+      .onChange(value => {
+        // Update separationAwareness value 
+        BlueProperty.separationAwareness = value;
+      })
+
+    blueFishFolder.add(obj, "blueAwareness", 0, 50, 0.1)
+      .name("Awareness")
+      .listen()
+      .onChange(value => {
+        // Update awareness value
+        BlueProperty.awareness = value;
+      })
+
+    blueFishFolder.add(obj, "resetBlueFish")
+      .name("Reset Blue Fish")
+      .listen()
+      .onChange(value => {
+        // Reset GUI sliders and property values to default
+        obj.blueCohesion = BlueProperty.cohesion = 0.05,
+          obj.blueSeparation = BlueProperty.separation = 0.3,
+          obj.blueAlignment = BlueProperty.alignment = 0.05,
+          obj.blueMovespeed = BlueProperty.moveSpeed = 0.8,
+          obj.blueSeparationAwareness = BlueProperty.separationAwareness = 3,
+          obj.blueAwareness = BlueProperty.awareness = 25
+      })
+
+    const redFishFolder = gui.addFolder("Red Fish Settings");
+
+    redFishFolder.add(obj, "redCohesion", 0, 1, 0.01)
+      .name("Cohesion")
+      .listen()
+      .onChange(value => {
+        // Update cohesion value
+        RedProperty.cohesion = value;
+      })
+    redFishFolder.add(obj, "redSeparation", 0, 1, 0.01)
+      .name("Separation")
+      .listen()
+      .onChange(value => {
+        // Update separation value
+        RedProperty.separation = value;
+      })
+    redFishFolder.add(obj, "redAlignment", 0, 1, 0.01)
+      .name("Alignment")
+      .listen()
+      .onChange(value => {
+        // Update alignment value
+        RedProperty.alignment = value;
+      })
+    redFishFolder.add(obj, "redMovespeed", 0.1, 3, 0.1)
+      .name("Move Speed")
+      .listen()
+      .onChange(value => {
+        // Update moveSpeed value
+        RedProperty.moveSpeed = value;
+      })
+    redFishFolder.add(obj, "redSeparationAwareness", 3, 10, 0.1)
+      .name("Separation Awareness")
+      .listen()
+      .onChange(value => {
+        // Update separationAwareness value
+        RedProperty.separationAwareness = value;
+      })
+
+    redFishFolder.add(obj, "redAwareness", 0, 50, 0.1)
+      .name("Awareness")
+      .listen()
+      .onChange(value => {
+        // Update awareness value
+        RedProperty.awareness = value;
+      })
+
+    redFishFolder.add(obj, "resetRedFish")
+      .name("Reset Red Fish")
+      .listen()
+      .onChange(value => {
+        // Reset GUI sliders and property values to default
+        obj.redCohesion = RedProperty.cohesion = 0.05,
+          obj.redSeparation = RedProperty.separation = 0.3,
+          obj.redAlignment = RedProperty.alignment = 0.05,
+          obj.redMovespeed = RedProperty.moveSpeed = 0.8,
+          obj.redSeparationAwareness = RedProperty.separationAwareness = 3,
+          obj.redAwareness = RedProperty.awareness = 25
+      })
 
     //create box wireframe Geometry and add to scene to visualise the world area
     const boundsGeometry = new THREE.BoxGeometry(BoidSettings.worldSize, BoidSettings.worldSize, BoidSettings.worldSize);
-    var boxMat = new THREE.MeshBasicMaterial();
-    boxMat.color = new THREE.Color(0, 0.8, 1);
-    boxMat.wireframe = true;
-    const boxMesh = new THREE.Mesh(boundsGeometry, boxMat);
+    // var boxMat = new THREE.MeshBasicMaterial();
+    // boxMat.color = new THREE.Color(0, 0.8, 1);
+    //boxMat.wireframe = true;
+    const boxMesh = new THREE.Mesh(boundsGeometry, shaderMaterial)
     boxMesh.position.set(0, 0, 0);
     scene.add(boxMesh);
 
@@ -103,33 +277,29 @@
       10);
 
     //creates 2000 normal 'blue' boids
-    for (let i = 0; i < 1700; i++) {
-      let boid = new Boid(
-        0, //id
-        0.02, //cohesian amount 0 - 1
-        0.15, //separation amount 0 - 1
-        0.02, //alignment amount 0 - 1
-        0.8, //movespeed
-        3, //separation awareness
-        25, //awareness
-        new THREE.Color(0, 1, 1), //boid color
-      );
+    for (let i = 0; i < 2000; i++) {
+      let boid = new Boid(BlueProperty); // object containing blue fish values
+      /*=======
+          for (let i = 0; i < 1700; i++) {
+            let boid = new Boid(
+              0, //id
+              0.02, //cohesian amount 0 - 1
+              0.15, //separation amount 0 - 1
+              0.02, //alignment amount 0 - 1
+              0.8, //movespeed
+              3, //separation awareness
+              25, //awareness
+              new THREE.Color(0, 1, 1), //boid color
+            );
+      >>>>>> dev*/
       boid.createBoid(scene); //render the boid
       boids.push(boid); //add the boid to the list
       octree.insert(boid); //add the boid to the octree
     }
+
     //create 100 enemy 'red' boids
-    for (let i = 0; i < 70; i++) {
-      let big = new Boid(
-        1, //id (greater than 0 means it'll chase the blue boids)
-        0.02,
-        0.5,
-        0.02,
-        0.4,
-        3,
-        50,
-        new THREE.Color(1, 0, 0),
-      );
+    for (let i = 0; i < 100; i++) {
+      let big = new Boid(RedProperty); //object containing red fish values
       big.createBoid(scene);
       boids.push(big);
       octree.insert(big);
@@ -139,17 +309,112 @@
     const directionalLight = new THREE.DirectionalLight(0xaaaadd, 1);
     directionalLight.position.set(50, 100, 50);
     scene.add(directionalLight);
-    
+
     const ambientLight = new THREE.AmbientLight(0x113144, 1);
     scene.add(ambientLight);
 
+    //add shark (done by Nathan)
+
+    //shark texture
+    var sharkTexture = new THREE.TextureLoader().load('./models/sharktexturegrey.png');
+    //shark material
+    var sharkMaterial = new THREE.MeshPhongMaterial();
+    sharkMaterial.map = sharkTexture;
+    sharkMaterial.side = THREE.DoubleSide;
+    //load shark model
+    var sharkLoader = new PLYLoader();
+    var loadPromise = sharkLoader.loadAsync('./models/lesharke.ply');
+
+    var sharkMesh;
+    await loadPromise.then(function (geometry) {
+      //compute bounding box of shark geometry
+      geometry.computeBoundingBox();
+
+      //variables to resize and recenter mesh position
+      var center = new THREE.Vector3();
+      var size = new THREE.Vector3();
+      geometry.boundingBox.getCenter(center);
+      geometry.boundingBox.getSize(size);
+      //geometry.rotateX(Math.PI / 2);
+      var min = geometry.boundingBox.min;
+
+      //transform and scale matrices
+      var sca = new THREE.Matrix4();
+      var tra = new THREE.Matrix4();
+
+      //apply transform and scale variables to matrices
+      var ScaleFact = 50 / size.length();
+      sca.makeScale(ScaleFact, ScaleFact, ScaleFact);
+      tra.makeTranslation(-center.x, -center.y, -min.z);
+
+      //make the mesh
+      sharkMesh = new THREE.Mesh(geometry, sharkMaterial);
+
+      //apply matrices to mesh
+      sharkMesh.applyMatrix4(tra);
+      sharkMesh.applyMatrix4(sca);
+
+      //rotates the shark mesh to make it face sideways
+      //sharkMesh.rotation.x = Math.PI;
+      //sharkMesh.rotation.y = Math.PI/2;
+
+      //bring the mesh to its position
+      sharkMesh.position.set(0, 0, 0);
+
+      //adds the shark mesh to scene
+      scene.add(sharkMesh);
+    }).catch();
+
+    //this.boidMesh = mesh;
+
     //orbit controls
     var controls = new OrbitControls(camera, renderer.domElement);
+
+    //shark controls (done by nathan)
+
+    //shark speed
+    var sharkSpeed = 20;
+    //Clock to give time variables
+    var Clock = new THREE.Clock();
+
+    //bool values to activate when key is pressed
+    var moveForward = false;
+    var moveBackward = false;
+    var rotateLeft = false;
+    var rotateRight = false;
+    var rotateUp = false;
+    var rotateDown = false;
+
+    //function called when a key is pressed
+    var GetKeyDown = function (event) {
+      switch (event.keyCode) {
+        case 76: moveForward = true; break; //'L'
+        case 75: moveBackward = true; break; //'K'
+        case 65: rotateLeft = true; break; //'A'
+        case 68: rotateRight = true; break; //'D'
+        case 87: rotateUp = true; break; //'W'
+        case 83: rotateDown = true; break; //'S'
+      }
+    }
+
+    //function called when a key is released
+    var GetKeyUp = function (event) {
+      switch (event.keyCode) {
+        case 76: moveForward = false; break;
+        case 75: moveBackward = false; break;
+        case 65: rotateLeft = false; break;
+        case 68: rotateRight = false; break;
+        case 87: rotateUp = false; break;
+        case 83: rotateDown = false; break;
+      }
+    }
 
     const boxSize = 50; //range for the octree to search for boids
     var Update = function () {
       renderer.render(scene, camera);
       controls.update();
+      //ye olde reliable deltatime
+      var delta = Clock.getDelta();
 
       //loop through every boid to update its values
       for (let i = 0; i < boids.length; i++) {
@@ -165,6 +430,39 @@
         let q = octree.query(search); //create a new list of boids within this one's box
         boids[i].flock(q); //run algorithm on this boid using its surroundings boids
         boids[i].update(); //update this boid's position
+        // console.log(boids[i].valueReference.movespeed);
+        // console.log(boids[i].id);
+        // console.log(boids[i].color);
+        // console.log(boids[i].valueReference.cohesion);
+
+      }
+
+      //if the shark's model has been loaded, do movement things 
+      if (sharkMesh != null) {
+        if (moveForward) {
+          //move forward based on the shark's local x axis
+          sharkMesh.translateX(sharkSpeed * delta);
+        }
+        if (moveBackward) {
+          //move backward based on the shark's local x axis
+          sharkMesh.translateX(-sharkSpeed * delta);
+        }
+        if (rotateLeft) {
+          //turn left
+          sharkMesh.rotation.y += Math.PI / 2 * delta;
+        }
+        if (rotateRight) {
+          //turn right
+          sharkMesh.rotation.y -= Math.PI / 2 * delta;
+        }
+        if (rotateUp) {
+          //turn upwards
+          sharkMesh.rotation.z += Math.PI / 2 * delta;
+        }
+        if (rotateDown) {
+          //turn downwards
+          sharkMesh.rotation.z -= Math.PI / 2 * delta;
+        }
       }
 
       requestAnimationFrame(Update);
@@ -184,6 +482,9 @@
 
     //link the resize of the window to the update of the camera
     window.addEventListener('resize', MyResize);
+
+    document.addEventListener('keydown', GetKeyDown, false);
+    document.addEventListener('keyup', GetKeyUp, false);
   </script>
 </body>
 
