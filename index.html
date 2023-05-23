@@ -372,8 +372,14 @@
 
     //shark controls (done by nathan)
 
-    //shark speed
-    var sharkSpeed = 20;
+    //shark speeds
+    var sharkSpeed = 0;
+    var horTurnSpeed = 0;
+    var verTurnSpeed = 0;
+    //speed caps
+    var speedCap = 20;
+    var horTurnCap = 20;
+    var verTurnCap = 20;
     //Clock to give time variables
     var Clock = new THREE.Clock();
 
@@ -440,20 +446,56 @@
       //if the shark's model has been loaded, do movement things 
       if (sharkMesh != null) {
         if (moveForward) {
+          //increase the speed of the shark if it hasn't reached the cap
+          if(sharkSpeed < speedCap)
+            sharkSpeed++;
           //move forward based on the shark's local x axis
           sharkMesh.translateX(sharkSpeed * delta);
         }
-        if (moveBackward) {
+        else if (moveBackward) {
+          //decrease the speed of the shark if it hasn't reached the cap
+          if(sharkSpeed > -speedCap)
+            sharkSpeed--;
           //move backward based on the shark's local x axis
-          sharkMesh.translateX(-sharkSpeed * delta);
+          sharkMesh.translateX(sharkSpeed * delta);
+        }
+        else if (!moveForward || !moveBackward && sharkSpeed != 0)
+        {
+          if(sharkSpeed < 0)
+          {
+            sharkSpeed++;
+            sharkMesh.translateX(sharkSpeed * delta);
+          }
+          else if(sharkSpeed > 0)
+          {
+            sharkSpeed--;
+            sharkMesh.translateX(sharkSpeed * delta);
+          }
         }
         if (rotateLeft) {
+          if(horTurnSpeed < horTurnCap)
+            horTurnSpeed++;
           //turn left
-          sharkMesh.rotation.y += Math.PI / 2 * delta;
+          sharkMesh.rotation.y += horTurnSpeed * delta;
         }
-        if (rotateRight) {
+        else if (rotateRight) {
+          if(horTurnSpeed > -horTurnCap)
+            horTurnSpeed--;
           //turn right
-          sharkMesh.rotation.y -= Math.PI / 2 * delta;
+          sharkMesh.rotation.y += horTurnSpeed * delta;
+        }
+        else if (!rotateLeft || !rotateRight && horTurnSpeed != 0)
+        {
+          if(horTurnSpeed < 0)
+          {
+            horTurnSpeed++;
+            sharkMesh.rotation.y += horTurnSpeed * delta;
+          }
+          else if(horTurnSpeed > 0)
+          {
+            horTurnSpeed--;
+            sharkMesh.rotation.y += horTurnSpeed * delta;
+          }
         }
         if (rotateUp) {
           //turn upwards
@@ -463,6 +505,7 @@
           //turn downwards
           sharkMesh.rotation.z -= Math.PI / 2 * delta;
         }
+        
       }
 
       requestAnimationFrame(Update);
