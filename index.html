@@ -378,8 +378,8 @@
     var verTurnSpeed = 0;
     //speed caps
     var speedCap = 20;
-    var horTurnCap = 20;
-    var verTurnCap = 20;
+    var horTurnCap = 5;
+    var verTurnCap = 5;
     //Clock to give time variables
     var Clock = new THREE.Clock();
 
@@ -498,12 +498,29 @@
           }
         }
         if (rotateUp) {
+          if(verTurnSpeed < verTurnCap)
+            verTurnSpeed++;
           //turn upwards
-          sharkMesh.rotation.z += Math.PI / 2 * delta;
+          sharkMesh.rotation.z += verTurnSpeed * delta;
         }
-        if (rotateDown) {
+        else if (rotateDown) {
+          if(verTurnSpeed > -verTurnCap)
+            verTurnSpeed--;
           //turn downwards
-          sharkMesh.rotation.z -= Math.PI / 2 * delta;
+          sharkMesh.rotation.z += verTurnSpeed * delta;
+        }
+        else if (!rotateUp || !rotateDown && verTurnSpeed != 0)
+        {
+          if(verTurnSpeed < 0)
+          {
+            verTurnSpeed++;
+            sharkMesh.rotation.z += verTurnSpeed * delta;
+          }
+          else if(verTurnSpeed > 0)
+          {
+            verTurnSpeed--;
+            sharkMesh.rotation.z += verTurnSpeed * delta;
+          }
         }
         
       }
