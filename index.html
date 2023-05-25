@@ -55,20 +55,11 @@
 
   <!-- Shaders -->
   <script id="vertexShader" type="x-shader/x-vertex">
-    varying vec3 vertexColor;
-
-    void main() {
-      vertexColor = normalize(position.xyz);
-      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-    }
+    
   </script>
 
   <script id="fragmentShader" type="x-shader/x-fragment">
-    varying vec3 vertexColor;
-
-    void main() {
-      gl_FragColor = vec4(vertexColor, 1.0);
-    }
+    
   </script>
 
   <script type="module">
@@ -82,7 +73,9 @@
     import { RGBELoader } from "./build/loaders/RGBELoader.js";
     import { OrbitControls } from './build/controls/OrbitControls.js';
     import { PLYLoader } from './build/loaders/PLYLoader.js';
-   // import * as dat from 'dat.gui';
+    import { WaterShader } from './shaders/water-shader.js';
+    import { Uniforms } from './shaders/uniforms.js';
+    // import * as dat from 'dat.gui';
 
     //create the scene
     var scene = new THREE.Scene();
@@ -109,14 +102,27 @@
 
     renderer.setSize(window.innerWidth, window.innerHeight);
     document.body.appendChild(renderer.domElement);
-
-    //shader material
-    const shaderMaterial = new THREE.ShaderMaterial({
-      fog: false,
-      wireframe: true, // For now, we'll stil use wireframe until we the textures on only one face
-      vertexShader: document.getElementById('vertexShader').textContent,
-      fragmentShader: document.getElementById('fragmentShader').textContent,
+    
+    const waterShader = WaterShader;
+    const uniforms = Uniforms;
+    
+    // Shader Material
+    const waterShaderMaterial = new THREE.ShaderMaterial({
+      uniforms: uniforms,
+      fragmentShader: waterShader.fragmentShader,
+      vertexShader: waterShader.vertexShader,
+      fog: true,
+      transparent: true,
     });
+
+    // Water Plane
+    const waterSurfaceGeometry = new THREE.PlaneGeometry(1000, 1000, 1000, 1000);
+    const waterSurfaceMesh = new THREE.Mesh(waterSurfaceGeometry, waterShaderMaterial);
+
+    waterSurfaceMesh.rotateX(90 * Math.PI / 180); // Flip it upside down
+    waterSurfaceMesh.position.y += 150;
+
+    scene.add(waterSurfaceMesh);
 
     // Create GUI
     const gui = new GUI().title("Fish Controls");
@@ -261,10 +267,10 @@
 
     //create box wireframe Geometry and add to scene to visualise the world area
     const boundsGeometry = new THREE.BoxGeometry(BoidSettings.worldSize, BoidSettings.worldSize, BoidSettings.worldSize);
-    // var boxMat = new THREE.MeshBasicMaterial();
-    // boxMat.color = new THREE.Color(0, 0.8, 1);
-    //boxMat.wireframe = true;
-    const boxMesh = new THREE.Mesh(boundsGeometry, shaderMaterial)
+    var boxMat = new THREE.MeshBasicMaterial();
+    boxMat.color = new THREE.Color(0, 0.8, 1);
+    boxMat.wireframe = true;
+    const boxMesh = new THREE.Mesh(boundsGeometry, boxMat)
     boxMesh.position.set(0, 0, 0);
     scene.add(boxMesh);
 
