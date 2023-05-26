@@ -1,4 +1,5 @@
 import * as THREE from '../three.module.js';
+import { scene, MainProperties } from '../main.js';
 import { BoidSettings } from './boidSettings.js';
 import { PLYLoader } from '../loaders/PLYLoader.js';
 
@@ -123,11 +124,19 @@ class Boid {
                 }
             }
             else { //move further away from enemy boids
-                if (other != this && distance < this.properties.separationAwareness * 6 && this.viewingAngle(other.position)) {
+                if (other != this && distance < this.properties.separationAwareness * 16 && this.viewingAngle(other.position)) {
                     let diff = new THREE.Vector3().subVectors(this.position, other.position);
                     diff.divideScalar(distance);
                     avg.add(diff);
                     total++;
+                    
+                    if (distance <= 5) {
+                        console.log("I died");
+                        scene.remove(this.boidMesh);
+                        MainProperties.numBoids--;
+                        this.boidMesh = null;
+                        this.position = new THREE.Vector3(-1000000, 1000000, 1000000);
+                    }
                 }
             }
         }
@@ -223,6 +232,7 @@ class Boid {
         var promise = loader.loadAsync('../../models/fishe.ply');
 
         var mesh;
+        MainProperties.numBoids++;
         await promise.then(function ( geometry ) {
             //compute bounding box of fish geometry
             geometry.computeBoundingBox();
