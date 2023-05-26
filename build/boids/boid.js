@@ -1,5 +1,5 @@
 import * as THREE from '../three.module.js';
-import { scene, MainProperties } from '../main.js';
+import { scene, MainProperties, octree, boids } from '../main.js';
 import { BoidSettings } from './boidSettings.js';
 import { PLYLoader } from '../loaders/PLYLoader.js';
 
@@ -121,6 +121,12 @@ class Boid {
                     diff.divideScalar(distance);
                     avg.add(diff);
                     total++;
+
+                    if (distance <= 1) {
+                        var newBoid = new Boid(this.properties);
+                        octree.insert(newBoid);
+                        boids.push(newBoid);
+                    }
                 }
             }
             else { //move further away from enemy boids
@@ -131,7 +137,6 @@ class Boid {
                     total++;
                     
                     if (distance <= 5) {
-                        console.log("I died");
                         scene.remove(this.boidMesh);
                         MainProperties.numBoids--;
                         this.boidMesh = null;
