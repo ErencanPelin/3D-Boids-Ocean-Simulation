@@ -26,6 +26,10 @@ export const WaterShader = {
 
         void main()
         {
+            #include <begin_vertex>
+            #include <project_vertex>
+            #include <fog_vertex>
+
             vNormal = normalize(normalMatrix * normal);
             vUv = uv;
             vUv *= 2.0;
@@ -45,58 +49,53 @@ export const WaterShader = {
             vec4 noise = noiseNormal_tex * noiseZIn_tex;
             noise = mix(noiseNormal_tex, noiseZIn_tex, 0.5);
 
-            #include <begin_vertex>
-            #include <project_vertex>
-
             gl_Position.y += noise.y;
-
-            #include <fog_vertex>
         }
         `,
     fragmentShader: `
-            uniform sampler2D noiseNormal;
-            uniform sampler2D noiseZIn;
-            uniform sampler2D noiseZOut;
+        uniform sampler2D noiseNormal;
+        uniform sampler2D noiseZIn;
+        uniform sampler2D noiseZOut;
 
-            uniform float u_time;
-            uniform float scroll_speed;
-            uniform float intensity;
-            uniform float foam_scale;
-            uniform float foam_amount;
+        uniform float u_time;
+        uniform float scroll_speed;
+        uniform float intensity;
+        uniform float foam_scale;
+        uniform float foam_amount;
 
-            varying vec2 vUv;
-            varying vec4 vScreen_uv;
-            varying vec3 vNormal;
+        varying vec2 vUv;
+        varying vec4 vScreen_uv;
+        varying vec3 vNormal;
 
-            vec4 scrolling_noise(float speed, sampler2D tex, vec2 uv_p)
-            {
-                vec3 uv = vec3(uv_p, 1.0);
-                float s = u_time / (1.0 / speed);
-                uv = s + uv;
+        vec4 scrolling_noise(float speed, sampler2D tex, vec2 uv_p)
+        {
+            vec3 uv = vec3(uv_p, 1.0);
+            float s = u_time / (1.0 / speed);
+            uv = s + uv;
 
-                return texture(tex, uv.xy);
-            }
+            return texture(tex, uv.xy);
+        }
 
-            void main()
-            {
-                /* ALBEDO */
+        void main()
+        {
+            /* ALBEDO */
 
-                // Large waves
-                vec4 noiseNormal_tex = scrolling_noise(scroll_speed / 2.0, noiseNormal, vUv);
-                vec4 noiseZIn_tex = scrolling_noise(scroll_speed, noiseZIn, vUv);
+            // Large waves
+            vec4 noiseNormal_tex = scrolling_noise(scroll_speed / 2.0, noiseNormal, vUv);
+            vec4 noiseZIn_tex = scrolling_noise(scroll_speed, noiseZIn, vUv);
 
-                vec4 noise = mix(noiseNormal_tex, noiseZIn_tex, 0.5);
-                noise *= vec4(0.21, 0.47, 0.87, 1.0);
+            vec4 noise = mix(noiseNormal_tex, noiseZIn_tex, 0.5);
+            noise *= vec4(0.21, 0.47, 0.87, 1.0);
 
-                // Foam
-                vec4 noiseZOut_tex = texture(noiseZOut, vUv);
-                vec4 noise4_tex = scrolling_noise((scroll_speed / 3.0) * foam_scale, noiseZIn, vUv * foam_scale);
-                vec4 stepped_noise = step(noise4_tex, noiseZOut_tex);
-                // stepped_noise = pow(stepped_noise, vec4(0.5));
+            // Foam
+            vec4 noiseZOut_tex = texture(noiseZOut, vUv);
+            vec4 noise4_tex = scrolling_noise((scroll_speed / 3.0) * foam_scale, noiseZIn, vUv * foam_scale);
+            vec4 stepped_noise = step(noise4_tex, noiseZOut_tex);
+            // stepped_noise = pow(stepped_noise, vec4(0.5));
 
-                noise = mix(noise, stepped_noise, foam_amount);
+            noise = mix(noise, stepped_noise, foam_amount);
 
-                gl_FragColor = noise * intensity;
-            }
-        `
+            gl_FragColor = noise * intensity;
+        }
+    `
 }

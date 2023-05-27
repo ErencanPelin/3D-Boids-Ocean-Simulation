@@ -25,3 +25,7 @@ export const Uniforms = {
     refraction_scale: { value: 1.0 },
     refraction_detail: { value: 0.1 },
 }
+
+export function ForwardTime() {
+    Uniforms.time.value += 0.01;
+}
