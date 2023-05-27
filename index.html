@@ -73,8 +73,8 @@
 
   <script type="module">
     import * as THREE from 'three';
+    import { scene, MainProperties, octree, boids } from './build/main.js'
     import { Boid } from './build/boids/boid.js';
-    import { Octree } from './build/octree/octree.js';
     import { Box } from './build/octree/box.js';
     import { BoidSettings } from './build/boids/boidSettings.js';
     import { BlueProperty } from './build/boids/boidSettings.js';
@@ -82,10 +82,8 @@
     import { RGBELoader } from "./build/loaders/RGBELoader.js";
     import { OrbitControls } from './build/controls/OrbitControls.js';
     import { PLYLoader } from './build/loaders/PLYLoader.js';
-   // import * as dat from 'dat.gui';
-
     //create the scene
-    var scene = new THREE.Scene();
+ //   var scene = new THREE.Scene();
     var ratio = window.innerWidth / window.innerHeight;
 
     var camera = new THREE.PerspectiveCamera(45, ratio, 0.1, 1000);
@@ -119,6 +117,7 @@
     });
 
     // Create GUI
+    //#region GUI
     const gui = new GUI().title("Fish Controls");
 
     var obj = {
@@ -259,6 +258,8 @@
           obj.redAwareness = RedProperty.awareness = 25
       })
 
+      //#endregion
+    
     //create box wireframe Geometry and add to scene to visualise the world area
     const boundsGeometry = new THREE.BoxGeometry(BoidSettings.worldSize, BoidSettings.worldSize, BoidSettings.worldSize);
     // var boxMat = new THREE.MeshBasicMaterial();
@@ -268,30 +269,9 @@
     boxMesh.position.set(0, 0, 0);
     scene.add(boxMesh);
 
-    var boids = []; //list of all active boids in the simulation
-    //boids octree, used for spacial partitioning and boid-neighbour comparison optimisation
-    const octree = new Octree(
-      new Box(
-        -BoidSettings.worldSize * 0.5, -BoidSettings.worldSize * 0.5, -BoidSettings.worldSize * 0.5,
-        BoidSettings.worldSize * 0.5, BoidSettings.worldSize * 0.5, BoidSettings.worldSize * 0.5),
-      10);
-
     //creates 2000 normal 'blue' boids
     for (let i = 0; i < 2000; i++) {
       let boid = new Boid(BlueProperty); // object containing blue fish values
-      /*=======
-          for (let i = 0; i < 1700; i++) {
-            let boid = new Boid(
-              0, //id
-              0.02, //cohesian amount 0 - 1
-              0.15, //separation amount 0 - 1
-              0.02, //alignment amount 0 - 1
-              0.8, //movespeed
-              3, //separation awareness
-              25, //awareness
-              new THREE.Color(0, 1, 1), //boid color
-            );
-      >>>>>> dev*/
       boid.createBoid(scene); //render the boid
       boids.push(boid); //add the boid to the list
       octree.insert(boid); //add the boid to the octree
@@ -313,6 +293,7 @@
     const ambientLight = new THREE.AmbientLight(0x113144, 1);
     scene.add(ambientLight);
 
+    //#region Shark controls
     //add shark (done by Nathan)
 
     //shark texture
@@ -414,7 +395,7 @@
         case 83: rotateDown = false; break;
       }
     }
-
+//#endregion
     const boxSize = 50; //range for the octree to search for boids
     var Update = function () {
       renderer.render(scene, camera);
