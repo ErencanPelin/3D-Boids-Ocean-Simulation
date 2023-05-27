@@ -116,11 +116,11 @@
     });
 
     // Water Plane
-    const waterSurfaceGeometry = new THREE.PlaneGeometry(1000, 1000, 1000, 1000);
+    const waterSurfaceGeometry = new THREE.PlaneGeometry(500, 500, 500, 500);
     const waterSurfaceMesh = new THREE.Mesh(waterSurfaceGeometry, waterShaderMaterial);
 
     waterSurfaceMesh.rotateX(90 * Math.PI / 180); // Flip it upside down
-    waterSurfaceMesh.position.y += 150;
+    waterSurfaceMesh.position.y += 110;
 
     scene.add(waterSurfaceMesh);
 
