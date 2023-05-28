@@ -7,7 +7,7 @@ export const WaterShader = {
     vertexShader: `
         uniform sampler2D noiseNormal;
         uniform sampler2D noiseZIn;
-        uniform float u_time;
+        uniform float time;
         uniform float scroll_speed;
         uniform float wave_height;
 
@@ -18,7 +18,7 @@ export const WaterShader = {
         vec4 scrolling_noise(float speed, sampler2D tex)
         {
             vec3 uv = vec3(vUv, 1.0);
-            float s = u_time / (1.0 / speed);
+            float s = time / (1.0 / speed);
             uv = s + uv;
 
             return texture(tex, uv.xy);
@@ -57,7 +57,7 @@ export const WaterShader = {
         uniform sampler2D noiseZIn;
         uniform sampler2D noiseZOut;
 
-        uniform float u_time;
+        uniform float time;
         uniform float scroll_speed;
         uniform float intensity;
         uniform float foam_scale;
@@ -70,7 +70,7 @@ export const WaterShader = {
         vec4 scrolling_noise(float speed, sampler2D tex, vec2 uv_p)
         {
             vec3 uv = vec3(uv_p, 1.0);
-            float s = u_time / (1.0 / speed);
+            float s = time / (1.0 / speed);
             uv = s + uv;
 
             return texture(tex, uv.xy);

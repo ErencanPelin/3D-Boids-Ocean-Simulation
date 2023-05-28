@@ -27,5 +27,5 @@ export const Uniforms = {
 }
 
 export function ForwardTime() {
-    Uniforms.time.value += 0.01;
+    Uniforms.time.value += 0.005;
 }
