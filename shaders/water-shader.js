@@ -1,9 +1,6 @@
-import { Uniforms } from "./uniforms.js"
-
 export const WaterShader = {
 
-    uniforms: { Uniforms },
-
+    // essentially the shader that moves the vertices
     vertexShader: `
         uniform sampler2D noiseNormal;
         uniform sampler2D noiseZIn;
@@ -32,26 +29,27 @@ export const WaterShader = {
 
             vNormal = normalize(normalMatrix * normal);
             vUv = uv;
-            vUv *= 2.0;
+            vUv *= 0.8; // Controls the scale of the entire texture. Default: 1
             vScreen_uv = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
 
-            // vertex displacement
+            // Displaces the vertices based on the noise texture
             vec4 noiseNormal_tex = scrolling_noise(scroll_speed / 2.0, noiseNormal);
             vec4 noiseZIn_tex = scrolling_noise(scroll_speed, noiseZIn);
 
             noiseNormal_tex *= wave_height;
             noiseZIn_tex *= wave_height;
 
-            // invert waves
+            // Changes the brightness of the peaks to be darker than the troughs
             noiseNormal_tex *= -1.0;
             noiseZIn_tex *= -1.0;
 
             vec4 noise = noiseNormal_tex * noiseZIn_tex;
-            noise = mix(noiseNormal_tex, noiseZIn_tex, 0.5);
+            noise = mix(noiseNormal_tex, noiseZIn_tex, 0.1);
 
             gl_Position.y += noise.y;
-        }
-        `,
+        }`,
+    
+    // and this is the shader that colours every texel on the surface
     fragmentShader: `
         uniform sampler2D noiseNormal;
         uniform sampler2D noiseZIn;
@@ -60,8 +58,6 @@ export const WaterShader = {
         uniform float time;
         uniform float scroll_speed;
         uniform float intensity;
-        uniform float foam_scale;
-        uniform float foam_amount;
 
         varying vec2 vUv;
         varying vec4 vScreen_uv;
@@ -80,20 +76,12 @@ export const WaterShader = {
         {
             /* ALBEDO */
 
-            // Large waves
+            // To keep the colour in-sync with the vertexShader
             vec4 noiseNormal_tex = scrolling_noise(scroll_speed / 2.0, noiseNormal, vUv);
             vec4 noiseZIn_tex = scrolling_noise(scroll_speed, noiseZIn, vUv);
 
             vec4 noise = mix(noiseNormal_tex, noiseZIn_tex, 0.5);
-            noise *= vec4(0.21, 0.47, 0.87, 1.0);
-
-            // Foam
-            vec4 noiseZOut_tex = texture(noiseZOut, vUv);
-            vec4 noise4_tex = scrolling_noise((scroll_speed / 3.0) * foam_scale, noiseZIn, vUv * foam_scale);
-            vec4 stepped_noise = step(noise4_tex, noiseZOut_tex);
-            // stepped_noise = pow(stepped_noise, vec4(0.5));
-
-            noise = mix(noise, stepped_noise, foam_amount);
+            noise *= vec4(0.20, 0.45, 0.85, 1.0); // Change colour here
 
             gl_FragColor = noise * intensity;
         }

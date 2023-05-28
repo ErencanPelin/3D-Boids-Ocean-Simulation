@@ -11,19 +11,17 @@ const noiseZOut = loader.load('./assets/noise/perlin-noise-zoomout.png')
 noiseZOut.wrapS = THREE.RepeatWrapping;
 noiseZOut.wrapT = THREE.RepeatWrapping;
 
+// Control what the shader looks like with these values.
+
 export const Uniforms = {
     noiseNormal: { value: noiseNormal },
     noiseZIn: { value: noiseZIn },
     noiseZOut: { value: noiseZOut },
-    noiseZOut_scale: { value: 1.0 },
-    noiseZout_amount: { value: 0.05 },
     time: { value: 0.0 },
-    scroll_speed: { value: 0.2 },
-    wave_height: { value: 2.0 },
-    intensity: { value: 2.0 },
-    refraction: { value: -0.0 },
-    refraction_scale: { value: 1.0 },
-    refraction_detail: { value: 0.1 },
+
+    scroll_speed: { value: 0.1 },
+    wave_height: { value: 25.0 },
+    intensity: { value: 2.25 }, // Intensity (lighting)
 }
 
 export function ForwardTime() {
