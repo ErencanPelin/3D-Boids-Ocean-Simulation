@@ -64,8 +64,8 @@
 
   <script type="module">
     import * as THREE from 'three';
+    import { scene, MainProperties, octree, boids } from './build/main.js'
     import { Boid } from './build/boids/boid.js';
-    import { Octree } from './build/octree/octree.js';
     import { Box } from './build/octree/box.js';
     import { BoidSettings } from './build/boids/boidSettings.js';
     import { BlueProperty } from './build/boids/boidSettings.js';
@@ -75,10 +75,9 @@
     import { PLYLoader } from './build/loaders/PLYLoader.js';
     import { WaterShader } from './shaders/water-shader.js';
     import { Uniforms, ForwardTime } from './shaders/uniforms.js';
-    // import * as dat from 'dat.gui';
 
     //create the scene
-    var scene = new THREE.Scene();
+ //   var scene = new THREE.Scene();
     var ratio = window.innerWidth / window.innerHeight;
 
     var camera = new THREE.PerspectiveCamera(45, ratio, 0.1, 1000);
@@ -125,6 +124,7 @@
     scene.add(waterSurfaceMesh);
 
     // Create GUI
+    //#region GUI
     const gui = new GUI().title("Fish Controls");
 
     var obj = {
@@ -265,6 +265,8 @@
           obj.redAwareness = RedProperty.awareness = 25
       })
 
+      //#endregion
+    
     //create box wireframe Geometry and add to scene to visualise the world area
     const boundsGeometry = new THREE.BoxGeometry(BoidSettings.worldSize, BoidSettings.worldSize, BoidSettings.worldSize);
     var boxMat = new THREE.MeshBasicMaterial();
@@ -274,30 +276,9 @@
     boxMesh.position.set(0, 0, 0);
     scene.add(boxMesh);
 
-    var boids = []; //list of all active boids in the simulation
-    //boids octree, used for spacial partitioning and boid-neighbour comparison optimisation
-    const octree = new Octree(
-      new Box(
-        -BoidSettings.worldSize * 0.5, -BoidSettings.worldSize * 0.5, -BoidSettings.worldSize * 0.5,
-        BoidSettings.worldSize * 0.5, BoidSettings.worldSize * 0.5, BoidSettings.worldSize * 0.5),
-      10);
-
     //creates 2000 normal 'blue' boids
     for (let i = 0; i < 2000; i++) {
       let boid = new Boid(BlueProperty); // object containing blue fish values
-      /*=======
-          for (let i = 0; i < 1700; i++) {
-            let boid = new Boid(
-              0, //id
-              0.02, //cohesian amount 0 - 1
-              0.15, //separation amount 0 - 1
-              0.02, //alignment amount 0 - 1
-              0.8, //movespeed
-              3, //separation awareness
-              25, //awareness
-              new THREE.Color(0, 1, 1), //boid color
-            );
-      >>>>>> dev*/
       boid.createBoid(scene); //render the boid
       boids.push(boid); //add the boid to the list
       octree.insert(boid); //add the boid to the octree
@@ -319,6 +300,7 @@
     const ambientLight = new THREE.AmbientLight(0x113144, 1);
     scene.add(ambientLight);
 
+    //#region Shark controls
     //add shark (done by Nathan)
 
     //shark texture
@@ -378,8 +360,14 @@
 
     //shark controls (done by nathan)
 
-    //shark speed
-    var sharkSpeed = 20;
+    //shark speeds
+    var sharkSpeed = 0;
+    var horTurnSpeed = 0;
+    var verTurnSpeed = 0;
+    //speed caps
+    var speedCap = 20;
+    var horTurnCap = 5;
+    var verTurnCap = 5;
     //Clock to give time variables
     var Clock = new THREE.Clock();
 
@@ -414,7 +402,7 @@
         case 83: rotateDown = false; break;
       }
     }
-
+//#endregion
     const boxSize = 50; //range for the octree to search for boids
     var Update = function () {
       renderer.render(scene, camera);
@@ -446,29 +434,83 @@
       //if the shark's model has been loaded, do movement things 
       if (sharkMesh != null) {
         if (moveForward) {
+          //increase the speed of the shark if it hasn't reached the cap
+          if(sharkSpeed < speedCap)
+            sharkSpeed++;
           //move forward based on the shark's local x axis
           sharkMesh.translateX(sharkSpeed * delta);
         }
-        if (moveBackward) {
+        else if (moveBackward) {
+          //decrease the speed of the shark if it hasn't reached the cap
+          if(sharkSpeed > -speedCap)
+            sharkSpeed--;
           //move backward based on the shark's local x axis
-          sharkMesh.translateX(-sharkSpeed * delta);
+          sharkMesh.translateX(sharkSpeed * delta);
+        }
+        else if (!moveForward || !moveBackward && sharkSpeed != 0)
+        {
+          if(sharkSpeed < 0)
+          {
+            sharkSpeed++;
+            sharkMesh.translateX(sharkSpeed * delta);
+          }
+          else if(sharkSpeed > 0)
+          {
+            sharkSpeed--;
+            sharkMesh.translateX(sharkSpeed * delta);
+          }
         }
         if (rotateLeft) {
+          if(horTurnSpeed < horTurnCap)
+            horTurnSpeed++;
           //turn left
-          sharkMesh.rotation.y += Math.PI / 2 * delta;
+          sharkMesh.rotation.y += horTurnSpeed * delta;
         }
-        if (rotateRight) {
+        else if (rotateRight) {
+          if(horTurnSpeed > -horTurnCap)
+            horTurnSpeed--;
           //turn right
-          sharkMesh.rotation.y -= Math.PI / 2 * delta;
+          sharkMesh.rotation.y += horTurnSpeed * delta;
+        }
+        else if (!rotateLeft || !rotateRight && horTurnSpeed != 0)
+        {
+          if(horTurnSpeed < 0)
+          {
+            horTurnSpeed++;
+            sharkMesh.rotation.y += horTurnSpeed * delta;
+          }
+          else if(horTurnSpeed > 0)
+          {
+            horTurnSpeed--;
+            sharkMesh.rotation.y += horTurnSpeed * delta;
+          }
         }
         if (rotateUp) {
+          if(verTurnSpeed < verTurnCap)
+            verTurnSpeed++;
           //turn upwards
-          sharkMesh.rotation.z += Math.PI / 2 * delta;
+          sharkMesh.rotation.z += verTurnSpeed * delta;
         }
-        if (rotateDown) {
+        else if (rotateDown) {
+          if(verTurnSpeed > -verTurnCap)
+            verTurnSpeed--;
           //turn downwards
-          sharkMesh.rotation.z -= Math.PI / 2 * delta;
+          sharkMesh.rotation.z += verTurnSpeed * delta;
         }
+        else if (!rotateUp || !rotateDown && verTurnSpeed != 0)
+        {
+          if(verTurnSpeed < 0)
+          {
+            verTurnSpeed++;
+            sharkMesh.rotation.z += verTurnSpeed * delta;
+          }
+          else if(verTurnSpeed > 0)
+          {
+            verTurnSpeed--;
+            sharkMesh.rotation.z += verTurnSpeed * delta;
+          }
+        }
+        
       }
 
       // Time Update
