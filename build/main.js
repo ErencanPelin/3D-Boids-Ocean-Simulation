@@ -10,7 +10,7 @@ var boids = [];
 const octree = new Octree(
   new Box(
     -BoidSettings.worldSize * 0.5, -BoidSettings.worldSize * 0.5, -BoidSettings.worldSize * 0.5,
-    BoidSettings.worldSize * 0.5, BoidSettings.worldSize * 0.5, BoidSettings.worldSize * 0.5),
+    BoidSettings.worldSize, BoidSettings.worldSize, BoidSettings.worldSize),
   10);
 
 var MainProperties = {

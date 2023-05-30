@@ -21,16 +21,26 @@ class Boid {
         this.acceleration = new THREE.Vector3();
     }
 
-    update() {
+    update(boids) {
         this.position.add(this.velocity); //update reference position
         this.velocity.add(this.acceleration);
         this.velocity.clampLength(-this.properties.moveSpeed, this.properties.moveSpeed); //clamp the length of the vector so it doesn't get faster than the movespeed
-        if(this.boidMesh != null)
-        {
+        if (this.boidMesh != null) {
             this.boidMesh.position.set(this.position.x, this.position.y, this.position.z); //update the mesh/object position in the scene
             this.acceleration.set(0, 0, 0); //reset acceleration
             var dir = new THREE.Vector3().copy(this.position).add(this.velocity);
             this.boidMesh.lookAt(dir);
+        }
+        for (let other of boids) {
+            let distance = this.position.distanceTo(other.position);
+            if (other != this && this.properties.id < other.properties.id && distance <= 5) {
+                scene.remove(this.boidMesh);
+                MainProperties.numBoids--;
+                this.boidMesh = null;
+                this.position = new THREE.Vector3(-1000000, 1000000, 1000000);
+                this.isDed = true;
+                break;
+            }
         }
     }
 
@@ -121,13 +131,6 @@ class Boid {
                     diff.divideScalar(distance);
                     avg.add(diff);
                     total++;
-
-                    //make babies
-                    if (distance <= 1 && this.properties.id == 0 && MainProperties.numBoids < MainProperties.maxBlueFish) { //only blue fish can reproduce (avoid reds from taking over the world)
-                        var newBoid = new Boid(this.properties);
-                        octree.insert(newBoid);
-                        boids.push(newBoid);
-                    }
                 }
             }
             else { //move further away from enemy boids
@@ -136,14 +139,6 @@ class Boid {
                     diff.divideScalar(distance);
                     avg.add(diff);
                     total++;
-                    
-                    //eat babies
-                    if (distance <= 5) {
-                        scene.remove(this.boidMesh);
-                        MainProperties.numBoids--;
-                        this.boidMesh = null;
-                        this.position = new THREE.Vector3(-1000000, 1000000, 1000000);
-                    }
                 }
             }
         }
@@ -168,6 +163,7 @@ class Boid {
 
             if (other != this && distance < this.properties.separationAwareness * 10 && this.viewingAngle(other.position)) {
                 if (this.properties.id < other.properties.id) {
+                    //eat babies
                     avg.add(new THREE.Vector3()
                         .copy(this.velocity) //create new reference (so we don't overwrite)
                         .reflect( //point in the opposite direction
@@ -208,13 +204,13 @@ class Boid {
             avg.setZ(-1);
 
         avg.setLength(this.properties.moveSpeed);
-        avg.clampLength(-this.properties.alignment, this.properties.alignment);
+        avg.clampLength(-0.1, 0.1);
         return avg;
     }
 
     async createBoid(scene) {
         //old boid creation
-        
+
         // const boidGeometry = new THREE.SphereGeometry();
         // const boidMat = new THREE.MeshBasicMaterial();
         // boidMat.wireframe = true;
@@ -240,7 +236,7 @@ class Boid {
 
         var mesh;
         MainProperties.numBoids++;
-        await promise.then(function ( geometry ) {
+        await promise.then(function (geometry) {
             //compute bounding box of fish geometry
             geometry.computeBoundingBox();
 
@@ -257,31 +253,31 @@ class Boid {
             var tra = new THREE.Matrix4();
 
             //apply transform and scale variables to matrices
-            var ScaleFact=7/size.length();
-            sca.makeScale(ScaleFact,ScaleFact,ScaleFact);
-            tra.makeTranslation (-center.x,-center.y,-min.z);
+            var ScaleFact = 7 / size.length();
+            sca.makeScale(ScaleFact, ScaleFact, ScaleFact);
+            tra.makeTranslation(-center.x, -center.y, -min.z);
 
             //make the mesh
-            mesh = new THREE.Mesh( geometry, boidMat );
-            
+            mesh = new THREE.Mesh(geometry, boidMat);
+
             //apply matrices to mesh
             mesh.applyMatrix4(tra);
             mesh.applyMatrix4(sca);
 
             //rotates the fish mesh to make it face towards the x axis
-            mesh.rotation.x = Math.PI/2;
+            mesh.rotation.x = Math.PI / 2;
 
             //bring the mesh to its position
             mesh.position.set(pos.x, pos.y, pos.z);
-            
+
             //adds the fish mesh to scene
             //this.boidMesh = mesh;
-            scene.add( mesh );
+            scene.add(mesh);
             //console.log(mesh);
             //buildScene();
             //console.log('PLY file loaded!');
         }).catch();
-        
+
         this.boidMesh = mesh;
         //this.boidMesh = mesh;
         //scene.add(this.boidMesh);

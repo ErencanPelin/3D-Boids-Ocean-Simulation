@@ -2,7 +2,7 @@ import * as THREE from '../three.module.js';
 
 //can be referenced in GUI
 const BoidSettings = {
-    worldSize: 200,
+    worldSize: 300,
 }
 
 var BlueProperty = {

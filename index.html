@@ -403,7 +403,7 @@
       }
     }
 //#endregion
-    const boxSize = 50; //range for the octree to search for boids
+    const boxSize = 40; //range for the octree to search for boids
     var Update = function () {
       renderer.render(scene, camera);
       controls.update();
@@ -414,21 +414,17 @@
       for (let i = 0; i < boids.length; i++) {
         //create new search area for the octree
         let search = new Box(
-          boids[i].position.x - boxSize,
-          boids[i].position.y - boxSize,
-          boids[i].position.z - boxSize,
-          boxSize * 2,
-          boxSize * 2,
-          boxSize * 2,
+          boids[i].position.x - (boxSize * 0.5),
+          boids[i].position.y - (boxSize * 0.5),
+          boids[i].position.z - (boxSize * 0.5),
+          boxSize,
+          boxSize,
+          boxSize,
         );
         let q = octree.query(search); //create a new list of boids within this one's box
+        if (boids[i].isDed) continue;
         boids[i].flock(q); //run algorithm on this boid using its surroundings boids
-        boids[i].update(); //update this boid's position
-        // console.log(boids[i].valueReference.movespeed);
-        // console.log(boids[i].id);
-        // console.log(boids[i].color);
-        // console.log(boids[i].valueReference.cohesion);
-
+        boids[i].update(q); //update this boid's position
       }
 
       //if the shark's model has been loaded, do movement things 
