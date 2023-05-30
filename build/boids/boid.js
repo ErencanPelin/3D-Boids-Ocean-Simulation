@@ -122,7 +122,8 @@ class Boid {
                     avg.add(diff);
                     total++;
 
-                    if (distance <= 1) {
+                    //make babies
+                    if (distance <= 1 && this.properties.id == 0 && MainProperties.numBoids < MainProperties.maxBlueFish) { //only blue fish can reproduce (avoid reds from taking over the world)
                         var newBoid = new Boid(this.properties);
                         octree.insert(newBoid);
                         boids.push(newBoid);
@@ -136,6 +137,7 @@ class Boid {
                     avg.add(diff);
                     total++;
                     
+                    //eat babies
                     if (distance <= 5) {
                         scene.remove(this.boidMesh);
                         MainProperties.numBoids--;
