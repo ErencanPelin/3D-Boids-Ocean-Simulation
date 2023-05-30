@@ -119,9 +119,38 @@
     const waterSurfaceMesh = new THREE.Mesh(waterSurfaceGeometry, waterShaderMaterial);
 
     waterSurfaceMesh.rotateX(90 * Math.PI / 180); // Flip it upside down
-    waterSurfaceMesh.position.y += 110;
-
+    waterSurfaceMesh.position.y = BoidSettings.worldSize * 0.55;
     scene.add(waterSurfaceMesh);
+
+
+
+
+    // Create sand plane
+    const geometry = new THREE.PlaneGeometry(1200, 1200);
+    const material = new THREE.MeshPhongMaterial({ color: 0xaaaaaa });
+    const surface = new THREE.Mesh(geometry, material);
+    surface.position.y = -BoidSettings.worldSize * 0.55;
+
+    var sand_texture = new THREE.TextureLoader().load("./assets/sand/Sand_001_COLOR.png");
+    // sand_texture.wrapS = THREE.RepeatWrapping;
+    // sand_texture.wrapT = THREE.RepeatWrapping;
+    sand_texture.repeat.set(24, 24);
+    material.map = sand_texture;
+    var normal_map = new THREE.TextureLoader().load("./assets/sand/Sand_001_NRM.png");
+    material.normalMap = normal_map;
+
+    const ao_map = new THREE.TextureLoader().load("/assets/sand/Sand_001_OCC.png");
+    material.aoMap = ao_map;
+    material.aoMapIntensity = 1;
+
+    material.side = THREE.DoubleSide;
+
+    normal_map.wrapS = normal_map.wrapT = THREE.RepeatingWrapping;
+    surface.rotation.x = -Math.PI / 2; // rotate the surface to be flat
+    scene.add(surface);
+
+    //scene.fog = new THREE.Fog(0x0000FF, 10, 20); 
+    //scene.fog.intensity = 10;
 
     // Create GUI
     //#region GUI
@@ -515,6 +544,8 @@
 
       // Time Update
       ForwardTime();
+
+      sharkMesh.updateMatrix();
 
       requestAnimationFrame(Update);
     };
