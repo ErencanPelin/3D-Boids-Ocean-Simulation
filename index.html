@@ -153,7 +153,7 @@
 
     const cylinderRadius = 500;
     const cylinderHeight = BoidSettings.worldSize * 1.2;
-    const cylinderMaterial = new THREE.MeshPhongMaterial({ color: 0xaaaaff, side: THREE.DoubleSide });
+    const cylinderMaterial = new THREE.MeshPhongMaterial({ color: 0xaaaaff, side: THREE.BackSide });
     const cylinderGeometry = new THREE.CylinderGeometry(cylinderRadius, cylinderRadius, cylinderHeight, 32);
     const cylinder = new THREE.Mesh(cylinderGeometry, cylinderMaterial);
     scene.add(cylinder);
