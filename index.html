@@ -77,7 +77,7 @@
     import { Uniforms, ForwardTime } from './shaders/uniforms.js';
 
     //create the scene
- //   var scene = new THREE.Scene();
+    //var scene = new THREE.Scene();
     var ratio = window.innerWidth / window.innerHeight;
 
     var camera = new THREE.PerspectiveCamera(45, ratio, 0.1, 6000);
@@ -110,7 +110,6 @@
       uniforms: uniforms,
       fragmentShader: waterShader.fragmentShader,
       vertexShader: waterShader.vertexShader,
-      fog: true,
       transparent: true,
     });
 
@@ -122,10 +121,7 @@
     waterSurfaceMesh.position.y = BoidSettings.worldSize * 0.65;
     scene.add(waterSurfaceMesh);
 
-
-
-
-    // Create sand plane
+    // Create Sand plane
     const geometry = new THREE.PlaneGeometry(2400, 2400);
     const material = new THREE.MeshPhongMaterial({ color: 0xaaaaaa });
     const surface = new THREE.Mesh(geometry, material);
@@ -149,18 +145,17 @@
     scene.add(surface);
 
 
-   // Create Cylinder Border
-   const cylinderRadius = 1000;
-   const cylinderHeight = BoidSettings.worldSize * 1.35;
-   const cylinderMaterial = new THREE.MeshPhongMaterial({ color: 0xaaaaff, side: THREE.BackSide });
-   const cylinderGeometry = new THREE.CylinderGeometry(cylinderRadius, cylinderRadius, cylinderHeight, 32, 1, true);   
-   const cylinder = new THREE.Mesh(cylinderGeometry, cylinderMaterial);
-   scene.add(cylinder);
-
+    // Create Cylinder Border
+    const cylinderRadius = 1000;
+    const cylinderHeight = BoidSettings.worldSize * 1.35;
+    const cylinderMaterial = new THREE.MeshPhongMaterial({ color: 0xaaaaff, side: THREE.BackSide });
+    const cylinderGeometry = new THREE.CylinderGeometry(cylinderRadius, cylinderRadius, cylinderHeight, 32, 1, true);   
+    const cylinder = new THREE.Mesh(cylinderGeometry, cylinderMaterial);
+    scene.add(cylinder);
 
     // Create fog
-    //scene.fog = new THREE.Fog(0x0000FF, 1, 1000); 
-    //scene.fog.intensity = 0.1;
+    scene.fog = new THREE.Fog(0x0000FF, 1, 3000); 
+    scene.fog.intensity = 0.1;
 
 
     // Create GUI
