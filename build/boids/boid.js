@@ -5,9 +5,9 @@ import { PLYLoader } from '../loaders/PLYLoader.js';
 
 class Boid {
     constructor(properties) {
-
         //set values
         this.properties = properties;
+        this.hasReproduced = false;
 
         //spawn
         var xSpawn = ((BoidSettings.worldSize - 50) * Math.random()) - ((BoidSettings.worldSize * 0.5) - 25);
@@ -33,19 +33,26 @@ class Boid {
         }
         for (let other of boidQ) {
             let distance = this.position.distanceTo(other.position);
-            if (other != this && this.properties.id < other.properties.id && distance <= 5) {
+            if (other != this && this.properties.id < other.properties.id && !other.isDed && distance <= 3) {
                 scene.remove(this.boidMesh);
                 MainProperties.numBoids--; //remove from boid counter
                 this.boidMesh = null;
                 this.position = new THREE.Vector3(-1000000, 1000000, 1000000);
                 this.isDed = true;
+                console.log("ded");
                 break;
             }
-            else  if (other != this && this.properties.id == other.properties.id && distance <= 0.1) {
-                var newBoid = new Boid(this.properties);
+            else if (!this.hasReproduced && 
+                other != this && 
+                this.properties.id == other.properties.id && 
+                !other.isDed && 
+                MainProperties.numBoids < MainProperties.maxFish &&
+                distance <= 0.5) {
+                let newBoid = new Boid(this.properties);
                 octree.insert(newBoid);
                 boids.push(newBoid);
-                newBoid.createBoid(scene);
+                console.log("born");
+                this.hasReproduced = true;
                 break;
             }
         }
