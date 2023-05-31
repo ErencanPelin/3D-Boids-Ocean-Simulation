@@ -527,13 +527,19 @@
           if(verTurnSpeed < verTurnCap)
             verTurnSpeed++;
           //turn upwards
-          sharkMesh.rotation.z += verTurnSpeed * delta;
+          if (sharkMesh.rotation.z <= Math.PI/2.15)
+            sharkMesh.rotation.z += verTurnSpeed * delta;
+          else
+            verTurnSpeed = 0;
         }
         else if (rotateDown) {
           if(verTurnSpeed > -verTurnCap)
             verTurnSpeed--;
           //turn downwards
-          sharkMesh.rotation.z += verTurnSpeed * delta;
+          if (sharkMesh.rotation.z >= -Math.PI/2.15)
+            sharkMesh.rotation.z += verTurnSpeed * delta;
+          else
+            verTurnSpeed = 0;
         }
         else if (!rotateUp || !rotateDown && verTurnSpeed != 0)
         {
