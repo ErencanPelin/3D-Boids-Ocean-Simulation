@@ -116,7 +116,7 @@
       transparent: true,
     });
 
-    // Water Plane
+    // Create Water Plane
     const waterSurfaceGeometry = new THREE.PlaneGeometry(2400, 2400, 2400, 2400);
     const waterSurfaceMesh = new THREE.Mesh(waterSurfaceGeometry, waterShaderMaterial);
 
@@ -141,25 +141,13 @@
     material.aoMap = ao_map;
     material.aoMapIntensity = 1;
 
-    //material.side = THREE.DoubleSide;
-
     normal_map.wrapS = normal_map.wrapT = THREE.RepeatingWrapping;
     surface.rotation.x = -Math.PI / 2; // rotate the surface to be flat
     scene.add(surface);
 
-
-    // // Create Cylinder Border
-    // const cylinderRadius = 1000;
-    // const cylinderHeight = BoidSettings.worldSize * 1.35;
-    // const cylinderMaterial = new THREE.MeshPhongMaterial({ color: 0xaaaaff, side: THREE.BackSide });
-    // const cylinderGeometry = new THREE.CylinderGeometry(cylinderRadius, cylinderRadius, cylinderHeight, 32, 1, true);   
-    // const cylinder = new THREE.Mesh(cylinderGeometry, cylinderMaterial);
-    // scene.add(cylinder);
-
     // Create fog
     scene.fog = new THREE.Fog(0x0000FF, 1, 2000); 
     scene.fog.intensity = 0.1;
-
 
     // Create GUI
     //#region GUI
@@ -353,10 +341,10 @@
         if (verTurnSpeed > verTurnCap) {
           verTurnSpeed = verTurnCap
         }
-        
+
         // MIGHT NEED TO FIGURE OUT ANOTHER WAY TO HAVE CLICKING OF GUI NOT UNFOCUS FROM MAIN SCREEN
-        // AS IT THINKS BUTTON IS CONTINUOUSLY HELD
-        document.body.focus();
+        // AS IT THINKS BUTTON IS CONTINUOUSLY HELD 
+        //document.body.focus();
 
         moveForward = false
         moveBackward = false
