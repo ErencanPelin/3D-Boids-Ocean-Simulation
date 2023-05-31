@@ -74,23 +74,26 @@
     import { OrbitControls } from './build/controls/OrbitControls.js';
     import { PLYLoader } from './build/loaders/PLYLoader.js';
     import { WaterShader } from './shaders/water-shader.js';
-    import { Uniforms, ForwardTime } from './shaders/uniforms.js';
+    import { SandShader } from './shaders/sand-shader.js';
+    import { WaterUniforms, SandUniforms, ForwardTime } from './shaders/uniforms.js';
 
     //create the scene
- //   var scene = new THREE.Scene();
+    //var scene = new THREE.Scene();
     var ratio = window.innerWidth / window.innerHeight;
 
-    var camera = new THREE.PerspectiveCamera(45, ratio, 0.1, 1000);
+    var camera = new THREE.PerspectiveCamera(45, ratio, 0.1, 3000);
     camera.position.set(0, 0, 500);
     camera.lookAt(0, 0, 1);
 
-    // Import skybox image into program
-    new RGBELoader()
-      .load("./skybox/underwater.hdr", function (texture) {
-        texture.mapping = THREE.EquirectangularReflectionMapping;
-        scene.background = texture;
-        scene.environment = texture;
-      });
+    // // Import skybox image into program
+    // new RGBELoader()
+    //   .load("./skybox/underwater.hdr", function (texture) {
+    //     texture.mapping = THREE.EquirectangularReflectionMapping;
+    //     scene.background = texture;
+    //     scene.environment = texture;
+    //   });
+
+    scene.background = new THREE.Color(0x0000ff);
 
     var renderer = new THREE.WebGLRenderer();
 
@@ -102,30 +105,76 @@
     renderer.setSize(window.innerWidth, window.innerHeight);
     document.body.appendChild(renderer.domElement);
     
-    const waterShader = WaterShader;
-    const uniforms = Uniforms;
+    // const waterShader = WaterShader;
+    // const waterUniforms = WaterUniforms;
     
     // Shader Material
     const waterShaderMaterial = new THREE.ShaderMaterial({
-      uniforms: uniforms,
-      fragmentShader: waterShader.fragmentShader,
-      vertexShader: waterShader.vertexShader,
-      fog: true,
+      uniforms: WaterUniforms,
+      fragmentShader: WaterShader.fragmentShader,
+      vertexShader: WaterShader.vertexShader,
+      //fog: true
       transparent: true,
     });
 
-    // Water Plane
-    const waterSurfaceGeometry = new THREE.PlaneGeometry(500, 500, 500, 500);
+    const causticsMaterial = new THREE.ShaderMaterial({
+      uniforms: SandUniforms,
+      fragmentShader: SandShader.fragmentShader,
+      vertexShader: SandShader.vertexShader,
+      //fog: true
+      transparent: true,
+    });
+
+    // Create Water Plane
+    const waterSurfaceGeometry = new THREE.PlaneGeometry(2400, 2400, 2400, 2400);
     const waterSurfaceMesh = new THREE.Mesh(waterSurfaceGeometry, waterShaderMaterial);
 
     waterSurfaceMesh.rotateX(90 * Math.PI / 180); // Flip it upside down
-    waterSurfaceMesh.position.y += 110;
-
+    waterSurfaceMesh.position.y = BoidSettings.worldSize * 0.65;
     scene.add(waterSurfaceMesh);
+
+    // Create Sand plane
+    const sandGeometry = new THREE.PlaneGeometry(2400, 2400);
+    const sandMaterial = new THREE.MeshPhongMaterial({ color: 0xaaaaaa });
+
+    var sand_texture = new THREE.TextureLoader().load("./assets/sand/Sand_001_COLOR.png");
+    sand_texture.wrapS = THREE.RepeatWrapping;
+    sand_texture.wrapT = THREE.RepeatWrapping;
+    sand_texture.repeat.set(24, 24);
+    
+    const surface = new THREE.Mesh(sandGeometry, sandMaterial);
+    surface.position.y = -BoidSettings.worldSize * 0.65;
+
+    var sand_texture = new THREE.TextureLoader().load("./assets/sand/Sand_001_COLOR.png");
+    sand_texture.repeat.set(24, 24);
+    sandMaterial.map = sand_texture;
+
+    var normal_map = new THREE.TextureLoader().load("./assets/sand/Sand_001_NRM.png");
+    sandMaterial.normalMap = normal_map;
+
+    const ao_map = new THREE.TextureLoader().load("/assets/sand/Sand_001_OCC.png");
+    sandMaterial.aoMap = ao_map;
+    sandMaterial.aoMapIntensity = 1;
+
+    normal_map.wrapS = normal_map.wrapT = THREE.RepeatingWrapping;
+    surface.rotation.x = -Math.PI / 2; // rotate the surface to be flat
+    scene.add(surface);
+
+    // Create Caustics plane
+    const causticsGeometry = new THREE.PlaneGeometry(2400, 2400);
+
+    const causticsMesh = new THREE.Mesh(causticsGeometry, causticsMaterial);
+    causticsMesh.position.y = -BoidSettings.worldSize * 0.65;
+    causticsMesh.rotation.x = -Math.PI / 2; // rotate the surface to be flat
+    scene.add(causticsMesh);
+
+    // Create fog
+    scene.fog = new THREE.Fog(0x0000FF, 1, 2000); 
+    scene.fog.intensity = 0.1;
 
     // Create GUI
     //#region GUI
-    const gui = new GUI().title("Fish Controls");
+    const gui = new GUI().title("Controls");
 
     var obj = {
       blueCohesion: 0.05,
@@ -145,6 +194,11 @@
       resetRedFish: function () { },
 
       resetAllFish: function () { },
+
+      sharkSpeedCap: 50,
+      sharkHorizontalTurnSpeedCap: 3,
+      sharkVerticalTurnSpeedCap: 3,
+      resetSharkSpeed: function () { }
     }
 
     const blueFishFolder = gui.addFolder("Blue Fish Settings");
@@ -258,17 +312,75 @@
       .onChange(value => {
         // Reset GUI sliders and property values to default
         obj.redCohesion = RedProperty.cohesion = 0.05,
-          obj.redSeparation = RedProperty.separation = 0.3,
-          obj.redAlignment = RedProperty.alignment = 0.05,
-          obj.redMovespeed = RedProperty.moveSpeed = 0.8,
-          obj.redSeparationAwareness = RedProperty.separationAwareness = 3,
-          obj.redAwareness = RedProperty.awareness = 25
+        obj.redSeparation = RedProperty.separation = 0.3,
+        obj.redAlignment = RedProperty.alignment = 0.05,
+        obj.redMovespeed = RedProperty.moveSpeed = 0.8,
+        obj.redSeparationAwareness = RedProperty.separationAwareness = 3,
+        obj.redAwareness = RedProperty.awareness = 25
+      })
+
+    const sharkFolder = gui.addFolder("Shark Settings");
+
+    sharkFolder.add(obj, "sharkSpeedCap", 1, 100, 1)
+      .name("Shark Speed Cap")
+      .listen()
+      .onChange(value => {
+        speedCap = value
+        if (sharkSpeed > speedCap) {
+          sharkSpeed = speedCap
+        }
+      })
+    sharkFolder.add(obj, "sharkHorizontalTurnSpeedCap", 1, 10, 1)
+      .name("Shark Horizontal Turn Speed Cap")
+      .listen()
+      .onChange(value => {
+        horTurnCap = value
+        if (horTurnSpeed > horTurnCap) {
+          horTurnSpeed = horTurnCap
+        }
+      })
+    sharkFolder.add(obj, "sharkVerticalTurnSpeedCap", 1, 10, 1)
+      .name("Shark Vertical Turn Speed Cap")
+      .listen()
+      .onChange(value => {
+        verTurnCap = value
+        if (verTurnSpeed > verTurnCap) {
+          verTurnSpeed = verTurnCap
+        }
+      })
+    sharkFolder.add(obj, "resetSharkSpeed")
+      .name("Reset Shark")
+      .listen()
+      .onChange(value => {
+        obj.sharkSpeedCap = speedCap = 50;
+        if (sharkSpeed > speedCap) {
+          sharkSpeed = speedCap
+        }
+        obj.sharkHorizontalTurnSpeedCap = horTurnCap = 3;
+        if (horTurnSpeed > horTurnCap) {
+          horTurnSpeed = horTurnCap
+        }
+        obj.sharkVerticalTurnSpeedCap = verTurnCap = 3;
+        if (verTurnSpeed > verTurnCap) {
+          verTurnSpeed = verTurnCap
+        }
+
+        // MIGHT NEED TO FIGURE OUT ANOTHER WAY TO HAVE CLICKING OF GUI NOT UNFOCUS FROM MAIN SCREEN
+        // AS IT THINKS BUTTON IS CONTINUOUSLY HELD 
+        //document.body.focus();
+
+        moveForward = false
+        moveBackward = false
+        rotateLeft = false
+        rotateRight = false
+        rotateUp = false
+        rotateDown = false
       })
 
       //#endregion
     
     //create box wireframe Geometry and add to scene to visualise the world area
-    const boundsGeometry = new THREE.BoxGeometry(BoidSettings.worldSize, BoidSettings.worldSize, BoidSettings.worldSize);
+    const boundsGeometry = new THREE.BoxGeometry(BoidSettings.worldSize * 2, BoidSettings.worldSize, BoidSettings.worldSize * 2);
     var boxMat = new THREE.MeshBasicMaterial();
     boxMat.color = new THREE.Color(0, 0.8, 1);
     boxMat.wireframe = true;
@@ -365,9 +477,9 @@
     var horTurnSpeed = 0;
     var verTurnSpeed = 0;
     //speed caps
-    var speedCap = 20;
-    var horTurnCap = 5;
-    var verTurnCap = 5;
+    var speedCap = 50;
+    var horTurnCap = 3;
+    var verTurnCap = 3;
     //Clock to give time variables
     var Clock = new THREE.Clock();
 
@@ -386,8 +498,8 @@
         case 75: moveBackward = true; break; //'K'
         case 65: rotateLeft = true; break; //'A'
         case 68: rotateRight = true; break; //'D'
-        case 87: rotateUp = true; break; //'W'
-        case 83: rotateDown = true; break; //'S'
+        case 83: rotateUp = true; break; //'W'
+        case 87: rotateDown = true; break; //'S'
       }
     }
 
@@ -398,8 +510,8 @@
         case 75: moveBackward = false; break;
         case 65: rotateLeft = false; break;
         case 68: rotateRight = false; break;
-        case 87: rotateUp = false; break;
-        case 83: rotateDown = false; break;
+        case 83: rotateUp = false; break;
+        case 87: rotateDown = false; break;
       }
     }
 //#endregion
@@ -431,15 +543,17 @@
       if (sharkMesh != null) {
         if (moveForward) {
           //increase the speed of the shark if it hasn't reached the cap
-          if(sharkSpeed < speedCap)
+          if(sharkSpeed <= speedCap)
             sharkSpeed++;
+            //fractionSpeedReduction = sharkSpeed / 10;
           //move forward based on the shark's local x axis
           sharkMesh.translateX(sharkSpeed * delta);
         }
         else if (moveBackward) {
           //decrease the speed of the shark if it hasn't reached the cap
-          if(sharkSpeed > -speedCap)
+          if(sharkSpeed >= -speedCap)
             sharkSpeed--;
+            //fractionSpeedReduction = sharkSpeed / 10;
           //move backward based on the shark's local x axis
           sharkMesh.translateX(sharkSpeed * delta);
         }
@@ -448,22 +562,24 @@
           if(sharkSpeed < 0)
           {
             sharkSpeed++;
+            //sharkSpeed += fractionSpeedReduction;
             sharkMesh.translateX(sharkSpeed * delta);
           }
           else if(sharkSpeed > 0)
           {
             sharkSpeed--;
+            //sharkSpeed -= fractionSpeedReduction;
             sharkMesh.translateX(sharkSpeed * delta);
           }
         }
         if (rotateLeft) {
-          if(horTurnSpeed < horTurnCap)
+          if(horTurnSpeed <= horTurnCap)
             horTurnSpeed++;
           //turn left
           sharkMesh.rotation.y += horTurnSpeed * delta;
         }
         else if (rotateRight) {
-          if(horTurnSpeed > -horTurnCap)
+          if(horTurnSpeed >= -horTurnCap)
             horTurnSpeed--;
           //turn right
           sharkMesh.rotation.y += horTurnSpeed * delta;
@@ -485,13 +601,19 @@
           if(verTurnSpeed < verTurnCap)
             verTurnSpeed++;
           //turn upwards
-          sharkMesh.rotation.z += verTurnSpeed * delta;
+          if (sharkMesh.rotation.z <= Math.PI/2.15)
+            sharkMesh.rotation.z += verTurnSpeed * delta;
+          else
+            verTurnSpeed = 0;
         }
         else if (rotateDown) {
           if(verTurnSpeed > -verTurnCap)
             verTurnSpeed--;
           //turn downwards
-          sharkMesh.rotation.z += verTurnSpeed * delta;
+          if (sharkMesh.rotation.z >= -Math.PI/2.15)
+            sharkMesh.rotation.z += verTurnSpeed * delta;
+          else
+            verTurnSpeed = 0;
         }
         else if (!rotateUp || !rotateDown && verTurnSpeed != 0)
         {
@@ -511,6 +633,8 @@
 
       // Time Update
       ForwardTime();
+
+      sharkMesh.updateMatrix();
 
       requestAnimationFrame(Update);
     };

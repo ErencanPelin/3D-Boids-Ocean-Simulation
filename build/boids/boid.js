@@ -188,9 +188,9 @@ class Boid {
     edgeAvoidance() {
         var avg = new THREE.Vector3(0, 0, 0);
 
-        if (this.position.x - 20 <= -BoidSettings.worldSize * 0.5)
+        if (this.position.x - 20 <= -BoidSettings.worldSize * 1)
             avg.setX(1);
-        if (this.position.x + 20 >= BoidSettings.worldSize * 0.5)
+        if (this.position.x + 20 >= BoidSettings.worldSize * 1)
             avg.setX(-1);
 
         if (this.position.y - 20 <= -BoidSettings.worldSize * 0.5)
@@ -198,9 +198,9 @@ class Boid {
         if (this.position.y + 20 >= BoidSettings.worldSize * 0.5)
             avg.setY(-1);
 
-        if (this.position.z - 20 <= -BoidSettings.worldSize * 0.5)
+        if (this.position.z - 20 <= -BoidSettings.worldSize * 1)
             avg.setZ(1);
-        if (this.position.z + 20 >= BoidSettings.worldSize * 0.5)
+        if (this.position.z + 20 >= BoidSettings.worldSize * 1)
             avg.setZ(-1);
 
         avg.setLength(this.properties.moveSpeed);
