@@ -21,7 +21,7 @@ class Boid {
         this.acceleration = new THREE.Vector3();
     }
 
-    update(boids) {
+    update(boidQ) {
         this.position.add(this.velocity); //update reference position
         this.velocity.add(this.acceleration);
         this.velocity.clampLength(-this.properties.moveSpeed, this.properties.moveSpeed); //clamp the length of the vector so it doesn't get faster than the movespeed
@@ -31,14 +31,21 @@ class Boid {
             var dir = new THREE.Vector3().copy(this.position).add(this.velocity);
             this.boidMesh.lookAt(dir);
         }
-        for (let other of boids) {
+        for (let other of boidQ) {
             let distance = this.position.distanceTo(other.position);
             if (other != this && this.properties.id < other.properties.id && distance <= 5) {
                 scene.remove(this.boidMesh);
-                MainProperties.numBoids--;
+                MainProperties.numBoids--; //remove from boid counter
                 this.boidMesh = null;
                 this.position = new THREE.Vector3(-1000000, 1000000, 1000000);
                 this.isDed = true;
+                break;
+            }
+            else  if (other != this && this.properties.id == other.properties.id && distance <= 0.1) {
+                var newBoid = new Boid(this.properties);
+                octree.insert(newBoid);
+                boids.push(newBoid);
+                newBoid.createBoid(scene);
                 break;
             }
         }
@@ -50,12 +57,12 @@ class Boid {
         return (rads < 3.927 || rads > 5.4978);
     }
 
-    flock(boids) {
+    flock(boidQ) {
         //by adding all the forces together, we can simulate all of them at the same time (just like physics in real life)
-        let alignment = this.align(boids);
-        let cohesion = this.cohesion(boids);
-        let separation = this.separation(boids);
-        let avoidance = this.avoidance(boids);
+        let alignment = this.align(boidQ);
+        let cohesion = this.cohesion(boidQ);
+        let separation = this.separation(boidQ);
+        let avoidance = this.avoidance(boidQ);
         let edgeAvoidance = this.edgeAvoidance();
         this.acceleration.add(separation);
         this.acceleration.add(alignment);
@@ -209,16 +216,6 @@ class Boid {
     }
 
     async createBoid(scene) {
-        //old boid creation
-
-        // const boidGeometry = new THREE.SphereGeometry();
-        // const boidMat = new THREE.MeshBasicMaterial();
-        // boidMat.wireframe = true;
-        // boidMat.color = this._color;
-        // this.boidMesh = new THREE.Mesh(boidGeometry, boidMat);
-        // this.boidMesh.position.set(this.position.x, this.position.y, this.position.z);
-        // scene.add(this.boidMesh);
-
         //creating boid via the fish ply model by Nathan
 
         //initialise a new Ply loader
@@ -235,6 +232,7 @@ class Boid {
         var promise = loader.loadAsync('../../models/fishe.ply');
 
         var mesh;
+        //add to boid counter
         MainProperties.numBoids++;
         await promise.then(function (geometry) {
             //compute bounding box of fish geometry
@@ -279,9 +277,6 @@ class Boid {
         }).catch();
 
         this.boidMesh = mesh;
-        //this.boidMesh = mesh;
-        //scene.add(this.boidMesh);
-        //console.log(mesh);
     }
 }
 
