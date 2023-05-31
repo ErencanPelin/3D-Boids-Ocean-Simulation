@@ -321,7 +321,7 @@
 
     const sharkFolder = gui.addFolder("Shark Settings");
 
-    sharkFolder.add(obj, "sharkSpeedCap", 1, 200, 1)
+    sharkFolder.add(obj, "sharkSpeedCap", 1, 100, 1)
       .name("Shark Speed Cap")
       .listen()
       .onChange(value => {

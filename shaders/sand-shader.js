@@ -78,7 +78,7 @@ export const SandShader = {
             vec4 sandTexture_texture = scrolling_noise(scroll_speed / 2.0, sandTexture, vUv);
 
             vec4 noise = mix(noiseNormal_texture, sandTexture_texture, 0.5);
-            noise *= vec4(0.9, 0.9, 0.9, 0.2); // Change colour here
+            noise *= vec4(0.9, 0.9, 0.9, 0.15); // Change colour here
 
             gl_FragColor = noise * intensity;
         }
