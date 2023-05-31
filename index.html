@@ -82,8 +82,8 @@
     var ratio = window.innerWidth / window.innerHeight;
 
     var camera = new THREE.PerspectiveCamera(45, ratio, 0.1, 3000);
-    camera.position.set(0, 0, 500);
-    camera.lookAt(0, 0, 1);
+    camera.position.set(-20, 5, 0);
+    camera.lookAt(0, 3, 0);
 
     // // Import skybox image into program
     // new RGBELoader()
@@ -463,12 +463,13 @@
 
       //adds the shark mesh to scene
       scene.add(sharkMesh);
+      sharkMesh.add(camera);
     }).catch();
 
     //this.boidMesh = mesh;
 
     //orbit controls
-    var controls = new OrbitControls(camera, renderer.domElement);
+  //  var controls = new OrbitControls(camera, renderer.domElement);
 
     //shark controls (done by nathan)
 
@@ -518,7 +519,8 @@
     const boxSize = 40; //range for the octree to search for boids
     var Update = function () {
       renderer.render(scene, camera);
-      controls.update();
+
+   //   controls.update();
       //ye olde reliable deltatime
       var delta = Clock.getDelta();
 
