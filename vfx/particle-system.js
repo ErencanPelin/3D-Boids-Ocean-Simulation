@@ -1,4 +1,4 @@
-import Nebula from "three-nebula";
+import Nebula, { SpriteRenderer } from "../build/three-nebula.js";
 
 export function CreateSystem() {
     

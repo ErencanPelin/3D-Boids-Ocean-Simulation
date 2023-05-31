@@ -12,7 +12,7 @@ import System, {
     Alpha,
     Scale,
     Color,
-  } from './three-nebula.js';
+  } from './three-nebula';
   import * as THREE from './three.module.js';
   
     const system = new System();
