@@ -163,7 +163,7 @@
 
     // Create GUI
     //#region GUI
-    const gui = new GUI().title("Fish Controls");
+    const gui = new GUI().title("Controls");
 
     var obj = {
       blueCohesion: 0.05,
@@ -183,6 +183,11 @@
       resetRedFish: function () { },
 
       resetAllFish: function () { },
+
+      sharkSpeedCap: 50,
+      sharkHorizontalTurnSpeedCap: 3,
+      sharkVerticalTurnSpeedCap: 3,
+      resetSharkSpeed: function () { }
     }
 
     const blueFishFolder = gui.addFolder("Blue Fish Settings");
@@ -296,11 +301,69 @@
       .onChange(value => {
         // Reset GUI sliders and property values to default
         obj.redCohesion = RedProperty.cohesion = 0.05,
-          obj.redSeparation = RedProperty.separation = 0.3,
-          obj.redAlignment = RedProperty.alignment = 0.05,
-          obj.redMovespeed = RedProperty.moveSpeed = 0.8,
-          obj.redSeparationAwareness = RedProperty.separationAwareness = 3,
-          obj.redAwareness = RedProperty.awareness = 25
+        obj.redSeparation = RedProperty.separation = 0.3,
+        obj.redAlignment = RedProperty.alignment = 0.05,
+        obj.redMovespeed = RedProperty.moveSpeed = 0.8,
+        obj.redSeparationAwareness = RedProperty.separationAwareness = 3,
+        obj.redAwareness = RedProperty.awareness = 25
+      })
+
+    const sharkFolder = gui.addFolder("Shark Settings");
+
+    sharkFolder.add(obj, "sharkSpeedCap", 1, 200, 1)
+      .name("Shark Speed Cap")
+      .listen()
+      .onChange(value => {
+        speedCap = value
+        if (sharkSpeed > speedCap) {
+          sharkSpeed = speedCap
+        }
+      })
+    sharkFolder.add(obj, "sharkHorizontalTurnSpeedCap", 1, 10, 1)
+      .name("Shark Horizontal Turn Speed Cap")
+      .listen()
+      .onChange(value => {
+        horTurnCap = value
+        if (horTurnSpeed > horTurnCap) {
+          horTurnSpeed = horTurnCap
+        }
+      })
+    sharkFolder.add(obj, "sharkVerticalTurnSpeedCap", 1, 10, 1)
+      .name("Shark Vertical Turn Speed Cap")
+      .listen()
+      .onChange(value => {
+        verTurnCap = value
+        if (verTurnSpeed > verTurnCap) {
+          verTurnSpeed = verTurnCap
+        }
+      })
+    sharkFolder.add(obj, "resetSharkSpeed")
+      .name("Reset Shark")
+      .listen()
+      .onChange(value => {
+        obj.sharkSpeedCap = speedCap = 50;
+        if (sharkSpeed > speedCap) {
+          sharkSpeed = speedCap
+        }
+        obj.sharkHorizontalTurnSpeedCap = horTurnCap = 3;
+        if (horTurnSpeed > horTurnCap) {
+          horTurnSpeed = horTurnCap
+        }
+        obj.sharkVerticalTurnSpeedCap = verTurnCap = 3;
+        if (verTurnSpeed > verTurnCap) {
+          verTurnSpeed = verTurnCap
+        }
+        
+        // MIGHT NEED TO FIGURE OUT ANOTHER WAY TO HAVE CLICKING OF GUI NOT UNFOCUS FROM MAIN SCREEN
+        // AS IT THINKS BUTTON IS CONTINUOUSLY HELD
+        document.body.focus();
+
+        moveForward = false
+        moveBackward = false
+        rotateLeft = false
+        rotateRight = false
+        rotateUp = false
+        rotateDown = false
       })
 
       //#endregion
@@ -403,9 +466,9 @@
     var horTurnSpeed = 0;
     var verTurnSpeed = 0;
     //speed caps
-    var speedCap = 20;
-    var horTurnCap = 5;
-    var verTurnCap = 5;
+    var speedCap = 50;
+    var horTurnCap = 3;
+    var verTurnCap = 3;
     //Clock to give time variables
     var Clock = new THREE.Clock();
 
@@ -473,15 +536,17 @@
       if (sharkMesh != null) {
         if (moveForward) {
           //increase the speed of the shark if it hasn't reached the cap
-          if(sharkSpeed < speedCap)
+          if(sharkSpeed <= speedCap)
             sharkSpeed++;
+            //fractionSpeedReduction = sharkSpeed / 10;
           //move forward based on the shark's local x axis
           sharkMesh.translateX(sharkSpeed * delta);
         }
         else if (moveBackward) {
           //decrease the speed of the shark if it hasn't reached the cap
-          if(sharkSpeed > -speedCap)
+          if(sharkSpeed >= -speedCap)
             sharkSpeed--;
+            //fractionSpeedReduction = sharkSpeed / 10;
           //move backward based on the shark's local x axis
           sharkMesh.translateX(sharkSpeed * delta);
         }
@@ -490,22 +555,24 @@
           if(sharkSpeed < 0)
           {
             sharkSpeed++;
+            //sharkSpeed += fractionSpeedReduction;
             sharkMesh.translateX(sharkSpeed * delta);
           }
           else if(sharkSpeed > 0)
           {
             sharkSpeed--;
+            //sharkSpeed -= fractionSpeedReduction;
             sharkMesh.translateX(sharkSpeed * delta);
           }
         }
         if (rotateLeft) {
-          if(horTurnSpeed < horTurnCap)
+          if(horTurnSpeed <= horTurnCap)
             horTurnSpeed++;
           //turn left
           sharkMesh.rotation.y += horTurnSpeed * delta;
         }
         else if (rotateRight) {
-          if(horTurnSpeed > -horTurnCap)
+          if(horTurnSpeed >= -horTurnCap)
             horTurnSpeed--;
           //turn right
           sharkMesh.rotation.y += horTurnSpeed * delta;
