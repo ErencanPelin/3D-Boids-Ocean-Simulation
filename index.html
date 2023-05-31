@@ -80,17 +80,19 @@
     //var scene = new THREE.Scene();
     var ratio = window.innerWidth / window.innerHeight;
 
-    var camera = new THREE.PerspectiveCamera(45, ratio, 0.1, 6000);
+    var camera = new THREE.PerspectiveCamera(45, ratio, 0.1, 3000);
     camera.position.set(0, 0, 500);
     camera.lookAt(0, 0, 1);
 
-    // Import skybox image into program
-    new RGBELoader()
-      .load("./skybox/underwater.hdr", function (texture) {
-        texture.mapping = THREE.EquirectangularReflectionMapping;
-        scene.background = texture;
-        scene.environment = texture;
-      });
+    // // Import skybox image into program
+    // new RGBELoader()
+    //   .load("./skybox/underwater.hdr", function (texture) {
+    //     texture.mapping = THREE.EquirectangularReflectionMapping;
+    //     scene.background = texture;
+    //     scene.environment = texture;
+    //   });
+
+    scene.background = new THREE.Color(0x0000ff);
 
     var renderer = new THREE.WebGLRenderer();
 
@@ -145,16 +147,16 @@
     scene.add(surface);
 
 
-    // Create Cylinder Border
-    const cylinderRadius = 1000;
-    const cylinderHeight = BoidSettings.worldSize * 1.35;
-    const cylinderMaterial = new THREE.MeshPhongMaterial({ color: 0xaaaaff, side: THREE.BackSide });
-    const cylinderGeometry = new THREE.CylinderGeometry(cylinderRadius, cylinderRadius, cylinderHeight, 32, 1, true);   
-    const cylinder = new THREE.Mesh(cylinderGeometry, cylinderMaterial);
-    scene.add(cylinder);
+    // // Create Cylinder Border
+    // const cylinderRadius = 1000;
+    // const cylinderHeight = BoidSettings.worldSize * 1.35;
+    // const cylinderMaterial = new THREE.MeshPhongMaterial({ color: 0xaaaaff, side: THREE.BackSide });
+    // const cylinderGeometry = new THREE.CylinderGeometry(cylinderRadius, cylinderRadius, cylinderHeight, 32, 1, true);   
+    // const cylinder = new THREE.Mesh(cylinderGeometry, cylinderMaterial);
+    // scene.add(cylinder);
 
     // Create fog
-    scene.fog = new THREE.Fog(0x0000FF, 1, 3000); 
+    scene.fog = new THREE.Fog(0x0000FF, 1, 2000); 
     scene.fog.intensity = 0.1;
 
 
