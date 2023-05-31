@@ -357,7 +357,7 @@
       //#endregion
     
     //create box wireframe Geometry and add to scene to visualise the world area
-    const boundsGeometry = new THREE.BoxGeometry(BoidSettings.worldSize, BoidSettings.worldSize, BoidSettings.worldSize);
+    const boundsGeometry = new THREE.BoxGeometry(BoidSettings.worldSize * 2, BoidSettings.worldSize, BoidSettings.worldSize * 2);
     var boxMat = new THREE.MeshBasicMaterial();
     boxMat.color = new THREE.Color(0, 0.8, 1);
     boxMat.wireframe = true;
