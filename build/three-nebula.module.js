@@ -12,8 +12,8 @@ import System, {
     Alpha,
     Scale,
     Color,
-  } from 'three-nebula';
-  import * as THREE from 'three';
+  } from './three-nebula.js';
+  import * as THREE from './three.module.js';
   
   const system = new System();
   const emitter = new Emitter();
