@@ -74,7 +74,8 @@
     import { OrbitControls } from './build/controls/OrbitControls.js';
     import { PLYLoader } from './build/loaders/PLYLoader.js';
     import { WaterShader } from './shaders/water-shader.js';
-    import { Uniforms, ForwardTime } from './shaders/uniforms.js';
+    import { SandShader } from './shaders/sand-shader.js';
+    import { WaterUniforms, SandUniforms, ForwardTime } from './shaders/uniforms.js';
 
     //create the scene
     //var scene = new THREE.Scene();
@@ -104,14 +105,22 @@
     renderer.setSize(window.innerWidth, window.innerHeight);
     document.body.appendChild(renderer.domElement);
     
-    const waterShader = WaterShader;
-    const uniforms = Uniforms;
+    // const waterShader = WaterShader;
+    // const waterUniforms = WaterUniforms;
     
     // Shader Material
     const waterShaderMaterial = new THREE.ShaderMaterial({
-      uniforms: uniforms,
-      fragmentShader: waterShader.fragmentShader,
-      vertexShader: waterShader.vertexShader,
+      uniforms: WaterUniforms,
+      fragmentShader: WaterShader.fragmentShader,
+      vertexShader: WaterShader.vertexShader,
+      //fog: true
+      transparent: true,
+    });
+
+    const causticsMaterial = new THREE.ShaderMaterial({
+      uniforms: SandUniforms,
+      fragmentShader: SandShader.fragmentShader,
+      vertexShader: SandShader.vertexShader,
       //fog: true
       transparent: true,
     });
@@ -125,25 +134,39 @@
     scene.add(waterSurfaceMesh);
 
     // Create Sand plane
-    const geometry = new THREE.PlaneGeometry(2400, 2400);
-    const material = new THREE.MeshPhongMaterial({ color: 0xaaaaaa });
-    const surface = new THREE.Mesh(geometry, material);
+    const sandGeometry = new THREE.PlaneGeometry(2400, 2400);
+    const sandMaterial = new THREE.MeshPhongMaterial({ color: 0xaaaaaa });
+
+    var sand_texture = new THREE.TextureLoader().load("./assets/sand/Sand_001_COLOR.png");
+    sand_texture.wrapS = THREE.RepeatWrapping;
+    sand_texture.wrapT = THREE.RepeatWrapping;
+    sand_texture.repeat.set(24, 24);
+    
+    const surface = new THREE.Mesh(sandGeometry, sandMaterial);
     surface.position.y = -BoidSettings.worldSize * 0.65;
 
     var sand_texture = new THREE.TextureLoader().load("./assets/sand/Sand_001_COLOR.png");
     sand_texture.repeat.set(24, 24);
-    material.map = sand_texture;
+    sandMaterial.map = sand_texture;
 
     var normal_map = new THREE.TextureLoader().load("./assets/sand/Sand_001_NRM.png");
-    material.normalMap = normal_map;
+    sandMaterial.normalMap = normal_map;
 
     const ao_map = new THREE.TextureLoader().load("/assets/sand/Sand_001_OCC.png");
-    material.aoMap = ao_map;
-    material.aoMapIntensity = 1;
+    sandMaterial.aoMap = ao_map;
+    sandMaterial.aoMapIntensity = 1;
 
     normal_map.wrapS = normal_map.wrapT = THREE.RepeatingWrapping;
     surface.rotation.x = -Math.PI / 2; // rotate the surface to be flat
     scene.add(surface);
+
+    // Create Caustics plane
+    const causticsGeometry = new THREE.PlaneGeometry(2400, 2400);
+
+    const causticsMesh = new THREE.Mesh(causticsGeometry, causticsMaterial);
+    causticsMesh.position.y = -BoidSettings.worldSize * 0.65;
+    causticsMesh.rotation.x = -Math.PI / 2; // rotate the surface to be flat
+    scene.add(causticsMesh);
 
     // Create fog
     scene.fog = new THREE.Fog(0x0000FF, 1, 2000); 
