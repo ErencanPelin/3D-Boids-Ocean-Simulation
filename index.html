@@ -80,7 +80,7 @@
  //   var scene = new THREE.Scene();
     var ratio = window.innerWidth / window.innerHeight;
 
-    var camera = new THREE.PerspectiveCamera(45, ratio, 0.1, 3000);
+    var camera = new THREE.PerspectiveCamera(45, ratio, 0.1, 6000);
     camera.position.set(0, 0, 500);
     camera.lookAt(0, 0, 1);
 
@@ -115,21 +115,21 @@
     });
 
     // Water Plane
-    const waterSurfaceGeometry = new THREE.PlaneGeometry(1200, 1200, 1200, 1200);
+    const waterSurfaceGeometry = new THREE.PlaneGeometry(2400, 2400, 2400, 2400);
     const waterSurfaceMesh = new THREE.Mesh(waterSurfaceGeometry, waterShaderMaterial);
 
     waterSurfaceMesh.rotateX(90 * Math.PI / 180); // Flip it upside down
-    waterSurfaceMesh.position.y = BoidSettings.worldSize * 0.55;
+    waterSurfaceMesh.position.y = BoidSettings.worldSize * 0.65;
     scene.add(waterSurfaceMesh);
 
 
 
 
     // Create sand plane
-    const geometry = new THREE.PlaneGeometry(1200, 1200);
+    const geometry = new THREE.PlaneGeometry(2400, 2400);
     const material = new THREE.MeshPhongMaterial({ color: 0xaaaaaa });
     const surface = new THREE.Mesh(geometry, material);
-    surface.position.y = -BoidSettings.worldSize * 0.55;
+    surface.position.y = -BoidSettings.worldSize * 0.65;
 
     var sand_texture = new THREE.TextureLoader().load("./assets/sand/Sand_001_COLOR.png");
     sand_texture.repeat.set(24, 24);
@@ -142,7 +142,7 @@
     material.aoMap = ao_map;
     material.aoMapIntensity = 1;
 
-    material.side = THREE.DoubleSide;
+    //material.side = THREE.DoubleSide;
 
     normal_map.wrapS = normal_map.wrapT = THREE.RepeatingWrapping;
     surface.rotation.x = -Math.PI / 2; // rotate the surface to be flat
@@ -150,16 +150,18 @@
 
 
    // Create Cylinder Border
+   const cylinderRadius = 1000;
+   const cylinderHeight = BoidSettings.worldSize * 1.35;
+   const cylinderMaterial = new THREE.MeshPhongMaterial({ color: 0xaaaaff, side: THREE.BackSide });
+   const cylinderGeometry = new THREE.CylinderGeometry(cylinderRadius, cylinderRadius, cylinderHeight, 32, 1, true);   
+   const cylinder = new THREE.Mesh(cylinderGeometry, cylinderMaterial);
+   scene.add(cylinder);
 
-    const cylinderRadius = 500;
-    const cylinderHeight = BoidSettings.worldSize * 1.2;
-    const cylinderMaterial = new THREE.MeshPhongMaterial({ color: 0xaaaaff, side: THREE.BackSide });
-    const cylinderGeometry = new THREE.CylinderGeometry(cylinderRadius, cylinderRadius, cylinderHeight, 32);
-    const cylinder = new THREE.Mesh(cylinderGeometry, cylinderMaterial);
-    scene.add(cylinder);
 
-    //scene.fog = new THREE.Fog(0x0000FF, 10, 20); 
-    //scene.fog.intensity = 10;
+    // Create fog
+    //scene.fog = new THREE.Fog(0x0000FF, 1, 1000); 
+    //scene.fog.intensity = 0.1;
+
 
     // Create GUI
     //#region GUI
