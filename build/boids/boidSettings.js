@@ -11,7 +11,7 @@ var BlueProperty = {
     separation: 0.3,
     alignment: 0.05,
     moveSpeed: 0.8,
-    separationAwareness: 3,
+    separationAwareness: 4.2,
     awareness: 25,
     colour: new THREE.Color(0, 1, 1)
 }
@@ -22,7 +22,7 @@ var RedProperty = {
     separation: 0.3,
     alignment: 0.05,
     moveSpeed: 0.8,
-    separationAwareness: 3,
+    separationAwareness: 4.2,
     awareness: 25,
     colour: new THREE.Color(1, 0, 0)
 }

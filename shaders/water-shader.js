@@ -81,7 +81,7 @@ export const WaterShader = {
             vec4 noiseZIn_tex = scrolling_noise(scroll_speed, noiseZIn, vUv);
 
             vec4 noise = mix(noiseNormal_tex, noiseZIn_tex, 0.5);
-            noise *= vec4(0.20, 0.45, 0.85, 1.0); // Change colour here
+            noise *= vec4(0.1, 0.2, 1, 1.0); // Change colour here
 
             gl_FragColor = noise * intensity;
         }

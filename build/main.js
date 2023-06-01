@@ -15,7 +15,7 @@ const octree = new Octree(
 
 var MainProperties = {
   numBoids: 0,
-  maxBlueFish: 2000,
+  maxFish: 3500,
 };
 
 export { scene, MainProperties, boids, octree };
