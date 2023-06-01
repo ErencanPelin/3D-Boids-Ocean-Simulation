@@ -84,8 +84,12 @@
     var ratio = window.innerWidth / window.innerHeight;
 
     var camera = new THREE.PerspectiveCamera(45, ratio, 0.1, 3000);
-    camera.position.set(-20, 5, 0);
+    camera.position.set(0, 0, 500);
+    var cameraXPos = 0;
+    var cameraYPos = 0;
+    var cameraZPos = 500;
     camera.lookAt(0, 3, 0);
+    scene.add(camera)
 
     // // Import skybox image into program
     // new RGBELoader()
@@ -171,7 +175,7 @@
     scene.add(causticsMesh);
 
     // Create fog
-    scene.fog = new THREE.Fog(0x0000FF, 100, 150); 
+    scene.fog = new THREE.Fog(0x0000FF, 1, 2000); //100 150 after other version fix
     scene.fog.intensity = 0.1;
 
     // Create rocks (nathan time)
@@ -191,6 +195,7 @@
       randNum *= Math.round(Math.random()) ? 1 : -1; 
       return randNum;
     }
+    
     // Create GUI
     //#region GUI
     const gui = new GUI().title("Controls");
@@ -217,7 +222,9 @@
       sharkSpeedCap: 50,
       sharkHorizontalTurnSpeedCap: 3,
       sharkVerticalTurnSpeedCap: 3,
-      resetSharkSpeed: function () { }
+      resetSharkSpeed: function () { },
+
+      cameraView: function () { }
     }
 
     const blueFishFolder = gui.addFolder("Blue Fish Settings");
@@ -396,6 +403,50 @@
         rotateDown = false
       })
 
+    const cameraFolder = gui.addFolder("Camera View");
+
+    obj.cameraView = "Default";
+    cameraFolder.add(obj, "cameraView", ["Default", "Shark 1st Person", "Shark 3rd Person"])
+      .name("Camera Settings")
+      .listen()
+      .onChange(value => {
+        if (obj.cameraView == "Default")
+        {
+          camera.position.x = cameraXPos;
+          camera.position.y = cameraYPos;
+          camera.position.z = cameraZPos;
+          controls.enabled = true;
+          //camera.lookAt(sharkMesh);
+          sharkMesh.remove(camera);
+          controls.update();
+
+        }
+        if (obj.cameraView == "Shark 1st Person")
+        {
+          cameraXPos = camera.position.x;
+          cameraYPos = camera.position.y;
+          cameraZPos = camera.position.z;
+          controls.enabled = false;
+          // Move to shark pos with offset
+          camera.position.clone(sharkMesh.position);
+          camera.rotation.clone(sharkMesh.rotation);
+          //camera.lookAt(sharkMesh);
+          sharkMesh.add(camera);
+        }
+        if (obj.cameraView == "Shark 3rd Person")
+        {
+          cameraXPos = camera.position.x;
+          cameraYPos = camera.position.y;
+          cameraZPos = camera.position.z;
+          controls.enabled = false;
+          // Move to shark pos with offset
+          camera.position.clone(sharkMesh.position).add(new THREE.Vector3(-20, 5, 0));
+          camera.rotation.clone(sharkMesh.rotation);
+          //camera.lookAt(sharkMesh);
+          sharkMesh.add(camera);
+        }
+      })
+
       //#endregion
     
     //create box wireframe Geometry and add to scene to visualise the world area
@@ -482,13 +533,13 @@
 
       //adds the shark mesh to scene
       scene.add(sharkMesh);
-      sharkMesh.add(camera);
+      //sharkMesh.add(camera);
     }).catch();
 
     //this.boidMesh = mesh;
 
     //orbit controls
-  //  var controls = new OrbitControls(camera, renderer.domElement);
+    var controls = new OrbitControls(camera, renderer.domElement);
 
     //shark controls (done by nathan)
 
