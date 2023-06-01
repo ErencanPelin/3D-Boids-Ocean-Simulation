@@ -399,13 +399,13 @@
       //#endregion
     
     //create box wireframe Geometry and add to scene to visualise the world area
-    const boundsGeometry = new THREE.BoxGeometry(BoidSettings.worldSize * 2, BoidSettings.worldSize, BoidSettings.worldSize * 2);
-    var boxMat = new THREE.MeshBasicMaterial();
-    boxMat.color = new THREE.Color(0, 0.8, 1);
-    boxMat.wireframe = true;
-    const boxMesh = new THREE.Mesh(boundsGeometry, boxMat)
-    boxMesh.position.set(0, 0, 0);
-    scene.add(boxMesh);
+    // const boundsGeometry = new THREE.BoxGeometry(BoidSettings.worldSize * 2, BoidSettings.worldSize, BoidSettings.worldSize * 2);
+    // var boxMat = new THREE.MeshBasicMaterial();
+    // boxMat.color = new THREE.Color(0, 0.8, 1);
+    // boxMat.wireframe = true;
+    // const boxMesh = new THREE.Mesh(boundsGeometry, boxMat)
+    // boxMesh.position.set(0, 0, 0);
+    // scene.add(boxMesh);
 
     //creates 2000 normal 'blue' boids
     for (let i = 0; i < 2000; i++) {
