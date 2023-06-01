@@ -77,9 +77,7 @@
     import { WaterShader } from './shaders/water-shader.js';
     import { SandShader } from './shaders/sand-shader.js';
     import { WaterUniforms, SandUniforms, ForwardTime } from './shaders/uniforms.js';
-    import { Uniforms, ForwardTime } from './shaders/uniforms.js';
-    import { CreateSystem } from './vfx/particle-system.js';
-    //import Nebula, { SpriteRenderer } from "./build/three-nebula.js";
+    import { trailGeometry, trailMaterial, trailPoints } from './vfx/particle-system.js';
 
     //create the scene
     //var scene = new THREE.Scene();
@@ -537,6 +535,26 @@
       }
     }
 //#endregion
+
+    // Trail Effect for Shark (Michael)
+
+    function updateTrail() {
+      trailPoints.push(sharkMesh.position.clone());
+
+      // Remove the oldest point if the trail becomes too long
+      if (trailPoints.length > 500) {
+        trailPoints.shift();
+      }
+
+      // Update the trail geometry
+      trailGeometry.setFromPoints(trailPoints);
+    }
+
+    const trail = new THREE.Line(trailGeometry, trailMaterial);
+    // const trail = new THREE.Mesh(trailGeometry, trailMaterial);
+    scene.add(trail);
+    // NOTE: Variables are contained in vfx/particle-system.js
+
     const boxSize = 40; //range for the octree to search for boids
     var Update = function () {
       renderer.render(scene, camera);
@@ -654,8 +672,8 @@
         
       }
 
-      // Time Update
-      ForwardTime();
+      ForwardTime(); // Time Update
+      updateTrail(); // Trail Update
 
       sharkMesh.updateMatrix();
 
