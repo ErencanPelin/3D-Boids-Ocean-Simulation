@@ -123,7 +123,7 @@
       uniforms: SandUniforms,
       fragmentShader: SandShader.fragmentShader,
       vertexShader: SandShader.vertexShader,
-      //fog: true
+      //fog: true,
       transparent: true,
     });
 
@@ -171,7 +171,7 @@
     scene.add(causticsMesh);
 
     // Create fog
-    scene.fog = new THREE.Fog(0x0000FF, 1, 2000); 
+    scene.fog = new THREE.Fog(0x0000FF, 100, 150); 
     scene.fog.intensity = 0.1;
 
     // Create rocks (nathan time)
