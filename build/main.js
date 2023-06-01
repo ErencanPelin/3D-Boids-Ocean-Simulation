@@ -9,8 +9,8 @@ var boids = [];
 //boids octree, used for spacial partitioning and boid-neighbour comparison optimisation
 const octree = new Octree(
   new Box(
-    -BoidSettings.worldSize * 0.5, -BoidSettings.worldSize * 0.5, -BoidSettings.worldSize * 0.5,
-    BoidSettings.worldSize, BoidSettings.worldSize, BoidSettings.worldSize),
+    -BoidSettings.worldSize, -BoidSettings.worldSize * 0.5, -BoidSettings.worldSize,
+    BoidSettings.worldSize * 2.0, BoidSettings.worldSize, BoidSettings.worldSize * 2.0),
   10);
 
 var MainProperties = {

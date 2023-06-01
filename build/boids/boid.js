@@ -1,19 +1,24 @@
 import * as THREE from '../three.module.js';
 import { scene, MainProperties, octree, boids } from '../main.js';
-import { BoidSettings } from './boidSettings.js';
+import { BlueProperty, BoidSettings } from './boidSettings.js';
 import { PLYLoader } from '../loaders/PLYLoader.js';
 
 class Boid {
-    constructor(properties) {
+    constructor(properties, position) {
         //set values
         this.properties = properties;
         this.hasReproduced = false;
+        this.isDed = false;
 
         //spawn
         var xSpawn = ((BoidSettings.worldSize - 50) * Math.random()) - ((BoidSettings.worldSize * 0.5) - 25);
         var ySpawn = ((BoidSettings.worldSize - 50) * Math.random()) - ((BoidSettings.worldSize * 0.5) - 25);
         var zSpawn = ((BoidSettings.worldSize - 50) * Math.random()) - ((BoidSettings.worldSize * 0.5) - 25);
-
+        if (position != null) {
+            xSpawn = position.x;
+            ySpawn = position.y;
+            zSpawn = position.z;
+        }
         //start each boid at a random position
         this.position = new THREE.Vector3(xSpawn, ySpawn, zSpawn);
         this.velocity = new THREE.Vector3().randomDirection();//new THREE.Vector3(Math.random() * 2 - 1, Math.random() * 2 - 1, Math.random() * 2 - 1);
@@ -39,7 +44,7 @@ class Boid {
                 this.boidMesh = null;
                 this.position = new THREE.Vector3(-1000000, 1000000, 1000000);
                 this.isDed = true;
-                console.log("ded");
+             //   console.log("ded");
                 break;
             }
             else if (!this.hasReproduced && 
@@ -48,11 +53,12 @@ class Boid {
                 !other.isDed && 
                 MainProperties.numBoids < MainProperties.maxFish &&
                 distance <= 0.5) {
-                let newBoid = new Boid(this.properties);
-                octree.insert(newBoid);
+
+                 let newBoid = new Boid(this.properties);
+                newBoid.createBoid(scene);
                 boids.push(newBoid);
-                console.log("born");
-                this.hasReproduced = true;
+                octree.insert(newBoid);
+                this.hasReproduced = true; 
                 break;
             }
         }
@@ -79,11 +85,11 @@ class Boid {
     }
 
     //align each boid to the average direction of every its surrounding boids
-    align(boids) {
+    align(boidsQ) {
         var avg = new THREE.Vector3(0, 0, 0); //store the average
         let total = 0; //number of boids we've sampled
         //loop through every nearby boid and set your own direction to the average of everyone elses
-        for (let other of boids) {
+        for (let other of boidsQ) {
             //the closer the other boids are, the more they should affect our direction
             let distance = this.position.distanceTo(other.position);
 
@@ -106,11 +112,11 @@ class Boid {
     }
 
     //flock to the average position of surrounding boids
-    cohesion(boids) {
+    cohesion(boidsQ) {
         var avg = new THREE.Vector3(0, 0, 0);
         let total = 0;
         //loop through every nearby boid and set your own direction to the average of everyone elses
-        for (let other of boids) {
+        for (let other of boidsQ) {
             let distance = this.position.distanceTo(other.position);
 
             if (other != this && distance < this.properties.awareness && this.viewingAngle(other.position)) {
@@ -132,11 +138,11 @@ class Boid {
     }
 
     //move away from boids to avoid collisions
-    separation(boids) {
+    separation(boidsQ) {
         var avg = new THREE.Vector3(0, 0, 0);
         let total = 0;
         //loop through every nearby boid and set your own direction to the average of everyone elses
-        for (let other of boids) {
+        for (let other of boidsQ) {
             let distance = this.position.distanceTo(other.position); //move more if the other boid is closer
 
             if (this.properties.id >= other.properties.id) {
@@ -167,12 +173,12 @@ class Boid {
     }
 
     //custom rule, avoid going near enemy boids
-    avoidance(boids) {
+    avoidance(boidsQ) {
         let total = 0;
         var avg = new THREE.Vector3();
 
         //loop through every nearby boid and set your own direction to the average of everyone elses
-        for (let other of boids) {
+        for (let other of boidsQ) {
             let distance = this.position.distanceTo(other.position);
 
             if (other != this && distance < this.properties.separationAwareness * 10 && this.viewingAngle(other.position)) {
@@ -202,9 +208,9 @@ class Boid {
     edgeAvoidance() {
         var avg = new THREE.Vector3(0, 0, 0);
 
-        if (this.position.x - 20 <= -BoidSettings.worldSize * 1)
+        if (this.position.x - 20 <= -BoidSettings.worldSize)
             avg.setX(1);
-        if (this.position.x + 20 >= BoidSettings.worldSize * 1)
+        if (this.position.x + 20 >= BoidSettings.worldSize)
             avg.setX(-1);
 
         if (this.position.y - 20 <= -BoidSettings.worldSize * 0.5)
@@ -212,9 +218,9 @@ class Boid {
         if (this.position.y + 20 >= BoidSettings.worldSize * 0.5)
             avg.setY(-1);
 
-        if (this.position.z - 20 <= -BoidSettings.worldSize * 1)
+        if (this.position.z - 20 <= -BoidSettings.worldSize)
             avg.setZ(1);
-        if (this.position.z + 20 >= BoidSettings.worldSize * 1)
+        if (this.position.z + 20 >= BoidSettings.worldSize)
             avg.setZ(-1);
 
         avg.setLength(this.properties.moveSpeed);
