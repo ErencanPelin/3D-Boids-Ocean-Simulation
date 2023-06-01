@@ -42,6 +42,9 @@ export const SandShader = {
         uniform float time;
         uniform float scroll_speed;
         uniform float intensity;
+        uniform vec3 fogColor;
+        uniform float fogNear;
+        uniform float fogFar;
 
         varying vec2 vTextureCoord;
 
@@ -56,9 +59,11 @@ export const SandShader = {
             // To keep the colour in-sync with the vertexShader
             vec4 noiseNormal_texture = generateScrollingNoise(scroll_speed / 2.0, noiseNormal, vTextureCoord);
             vec4 sandTexture_texture = generateScrollingNoise(scroll_speed / 2.0, sandTexture, vTextureCoord);
+            
             vec4 noise = mix(noiseNormal_texture, sandTexture_texture, 0.5);
             noise *= vec4(0.9, 0.9, 0.9, 0.175); // Change colour here
-            gl_FragColor = noise * intensity;
+            float fogFactor = smoothstep(fogNear, fogFar, gl_FragCoord.z / gl_FragCoord.w);
+            gl_FragColor = mix(vec4(fogColor, 1.0), noise * intensity, fogFactor);
         }
     `
 }
