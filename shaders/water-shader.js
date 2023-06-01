@@ -51,8 +51,8 @@ export const WaterShader = {
 
         varying vec2 vTextureCoord;
 
-        vec4 generateScrollingNoise(float speed, sampler2D var_texture, vec2 uv_p) {
-            vec3 uv = vec3(uv_p, 1.0);
+        vec4 generateScrollingNoise(float speed, sampler2D var_texture, vec2 coordCurrentPixel) {
+            vec3 uv = vec3(coordCurrentPixel, 1.0);
             float scrollOffset = time / (1.0 / speed);
             uv = scrollOffset + uv;
             return texture(var_texture, uv.xy);
