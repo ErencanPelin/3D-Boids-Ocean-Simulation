@@ -27,7 +27,7 @@ export const WaterUniforms = {
     time: { value: 0.0 },
 
     scroll_speed: { value: 0.1 },
-    wave_height: { value: 25.0 },
+    wave_height: { value: 20.0 },
     intensity: { value: 2.25 }, // Intensity (lighting)
 }
 
@@ -39,11 +39,11 @@ export const SandUniforms = {
     time: { value: 0.0 },
 
     scroll_speed: { value: 0.1 },
-    sand_height: { value: 50.0 },
+    sand_height: { value: 1.1 },
     intensity: { value: 1.25 }, // Intensity (lighting)
 }
 
 export function ForwardTime() {
-    WaterUniforms.time.value += 0.005;
+    WaterUniforms.time.value += 0.003;
     SandUniforms.time.value += 0.005;
 }
