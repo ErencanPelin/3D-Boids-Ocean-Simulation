@@ -36,16 +36,16 @@ class Boid {
             var dir = new THREE.Vector3().copy(this.position).add(this.velocity);
             this.boidMesh.lookAt(dir);
         }
-        /*for (let other of boidQ) {
+        for (let other of boidQ) {
             let distance = this.position.distanceTo(other.position);
             if (other != this && this.properties.id < other.properties.id && !other.isDed && distance <= 3) {
-             /*   scene.remove(this.boidMesh);
+                scene.remove(this.boidMesh);
                 MainProperties.numBoids--; //remove from boid counter
                 this.boidMesh = null;
                 this.position = new THREE.Vector3(-1000000, 1000000, 1000000);
                 this.isDed = true;
              //   console.log("ded");
-                break;*
+                break;
             }
             else if (!this.hasReproduced && 
                 other != this && 
@@ -54,14 +54,14 @@ class Boid {
                 MainProperties.numBoids < MainProperties.maxFish &&
                 distance <= 0.5) {
 
-         /*        let newBoid = new Boid(this.properties);
+                 let newBoid = new Boid(this.properties);
                 newBoid.createBoid(scene);
                 boids.push(newBoid);
                 octree.insert(newBoid);
-                this.hasReproduced = true; *
+                this.hasReproduced = true; 
                 break;
             }
-        }*/
+        }
     }
 
     viewingAngle(other) {
