@@ -84,8 +84,12 @@
     var ratio = window.innerWidth / window.innerHeight;
 
     var camera = new THREE.PerspectiveCamera(45, ratio, 0.1, 3000);
-    camera.position.set(-20, 5, 0);
-    camera.lookAt(0, 3, 0);
+    camera.position.set(350, 50, 300);
+    var cameraXPos = 0;
+    var cameraYPos = 0;
+    var cameraZPos = 500;
+    camera.lookAt(0, 0, 0);
+    scene.add(camera)
 
     // // Import skybox image into program
     // new RGBELoader()
@@ -171,7 +175,7 @@
     scene.add(causticsMesh);
 
     // Create fog
-    scene.fog = new THREE.Fog(0x0000FF, 100, 150); 
+    scene.fog = new THREE.Fog(0x0000FF, 1, 2000); //100 150 after other version fix
     scene.fog.intensity = 0.1;
 
     // Create rocks (nathan time)
@@ -191,6 +195,7 @@
       randNum *= Math.round(Math.random()) ? 1 : -1; 
       return randNum;
     }
+    
     // Create GUI
     //#region GUI
     const gui = new GUI().title("Controls");
@@ -215,9 +220,11 @@
       resetAllFish: function () { },
 
       sharkSpeedCap: 50,
-      sharkHorizontalTurnSpeedCap: 3,
-      sharkVerticalTurnSpeedCap: 3,
-      resetSharkSpeed: function () { }
+      sharkHorizontalTurnSpeedCap: 1,
+      sharkVerticalTurnSpeedCap: 2,
+      resetSharkSpeed: function () { },
+
+      cameraView: function () { }
     }
 
     const blueFishFolder = gui.addFolder("Blue Fish Settings");
@@ -349,7 +356,7 @@
           sharkSpeed = speedCap
         }
       })
-    sharkFolder.add(obj, "sharkHorizontalTurnSpeedCap", 1, 10, 1)
+    sharkFolder.add(obj, "sharkHorizontalTurnSpeedCap", 1, 5, 1)
       .name("Shark Horizontal Turn Speed Cap")
       .listen()
       .onChange(value => {
@@ -395,6 +402,49 @@
         rotateUp = false
         rotateDown = false
       })
+
+    const cameraFolder = gui.addFolder("Camera View");
+
+    obj.cameraView = "Orbit Controls";
+    var lastCameraViewWasOrbit = true;
+
+    cameraFolder.add(obj, "cameraView", ["Orbit Controls", "Shark 1st Person", "Shark 3rd Person"])
+      .name("Camera Settings")
+      .listen()
+      .onChange(value => {
+        // Store last camera position if last camera view was orbit controls
+        if (lastCameraViewWasOrbit) {
+            cameraXPos = camera.position.x;
+            cameraYPos = camera.position.y;
+            cameraZPos = camera.position.z;
+            lastCameraViewWasOrbit = false
+          }
+        if (obj.cameraView == "Orbit Controls") {
+          camera.position.x = cameraXPos;
+          camera.position.y = cameraYPos;
+          camera.position.z = cameraZPos;
+          lastCameraViewWasOrbit = true;
+          controls.enabled = true;
+          sharkMesh.remove(camera);
+          controls.update();
+        }
+        if (obj.cameraView == "Shark 1st Person") {
+          controls.enabled = false;
+          controls.reset();
+          camera.position.set(10, 0, 0);
+          // Adjust the rotation to face the nose of the shark
+          camera.rotation.set(0, -Math.PI / 2, 0);
+          sharkMesh.add(camera);
+        }
+        if (obj.cameraView == "Shark 3rd Person") {
+          controls.enabled = false;
+          controls.reset();
+          camera.position.set(-20, 5, 0);
+          // Adjust the rotation to face the nose of the shark
+          camera.rotation.set(0, -Math.PI / 2, 0);
+          sharkMesh.add(camera);
+        }
+      });
 
       //#endregion
     
@@ -482,13 +532,13 @@
 
       //adds the shark mesh to scene
       scene.add(sharkMesh);
-      sharkMesh.add(camera);
+      //sharkMesh.add(camera);
     }).catch();
 
     //this.boidMesh = mesh;
 
     //orbit controls
-  //  var controls = new OrbitControls(camera, renderer.domElement);
+    var controls = new OrbitControls(camera, renderer.domElement);
 
     //shark controls (done by nathan)
 
@@ -498,8 +548,8 @@
     var verTurnSpeed = 0;
     //speed caps
     var speedCap = 50;
-    var horTurnCap = 3;
-    var verTurnCap = 3;
+    var horTurnCap = 1;
+    var verTurnCap = 2;
     //Clock to give time variables
     var Clock = new THREE.Clock();
 
