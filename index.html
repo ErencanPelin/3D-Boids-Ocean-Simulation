@@ -64,7 +64,8 @@
 
   <script type="module">
     import * as THREE from 'three';
-    import { scene, MainProperties, octree, boids } from './build/main.js'
+    import * as RockLoader from './build/loadrocks.js';
+    import { scene, MainProperties, octree, boids } from './build/main.js';
     import { Boid } from './build/boids/boid.js';
     import { Box } from './build/octree/box.js';
     import { BoidSettings } from './build/boids/boidSettings.js';
@@ -172,6 +173,23 @@
     scene.fog = new THREE.Fog(0x0000FF, 1, 2000); 
     scene.fog.intensity = 0.1;
 
+    // Create rocks (nathan time)
+    
+    var numRocks = 500;
+  
+    
+    for(var i = 0; i < numRocks; i++)
+    {
+      var rockPos = new THREE.Vector3(getRandPos(), surface.position.y, getRandPos());
+      RockLoader.loadRock(scene, rockPos);
+    }
+
+    function getRandPos ()
+    {
+      var randNum = Math.floor(Math.random()*1000) + 1;
+      randNum *= Math.round(Math.random()) ? 1 : -1; 
+      return randNum;
+    }
     // Create GUI
     //#region GUI
     const gui = new GUI().title("Controls");
