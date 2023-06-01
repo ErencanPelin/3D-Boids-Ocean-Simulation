@@ -39,7 +39,7 @@ class Boid {
                 this.boidMesh = null;
                 this.position = new THREE.Vector3(-1000000, 1000000, 1000000);
                 this.isDed = true;
-                console.log("ded");
+             //   console.log("ded");
                 break;
             }
             else if (!this.hasReproduced && 
@@ -51,7 +51,7 @@ class Boid {
                 let newBoid = new Boid(this.properties);
                 octree.insert(newBoid);
                 boids.push(newBoid);
-                console.log("born");
+             //   console.log("born");
                 this.hasReproduced = true;
                 break;
             }

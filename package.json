@@ -3,7 +3,6 @@
     "three-nebula": "^10.0.3"
   },
   "devDependencies": {
-    "@types/dat.gui": "^0.7.7",
-    "dat.gui": "^0.7.9"
+    "@types/dat.gui": "^0.7.7"
   }
 }
