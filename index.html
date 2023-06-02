@@ -55,26 +55,18 @@
 
   <!-- Shaders -->
   <script id="vertexShader" type="x-shader/x-vertex">
-    varying vec3 vertexColor;
-
-    void main() {
-      vertexColor = normalize(position.xyz);
-      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-    }
+    
   </script>
 
   <script id="fragmentShader" type="x-shader/x-fragment">
-    varying vec3 vertexColor;
-
-    void main() {
-      gl_FragColor = vec4(vertexColor, 1.0);
-    }
+    
   </script>
 
   <script type="module">
     import * as THREE from 'three';
+    import * as RockLoader from './build/loadrocks.js';
+    import { scene, MainProperties, octree, boids } from './build/main.js';
     import { Boid } from './build/boids/boid.js';
-    import { Octree } from './build/octree/octree.js';
     import { Box } from './build/octree/box.js';
     import { BoidSettings } from './build/boids/boidSettings.js';
     import { BlueProperty } from './build/boids/boidSettings.js';
@@ -82,23 +74,32 @@
     import { RGBELoader } from "./build/loaders/RGBELoader.js";
     import { OrbitControls } from './build/controls/OrbitControls.js';
     import { PLYLoader } from './build/loaders/PLYLoader.js';
-   // import * as dat from 'dat.gui';
+    import { WaterShader } from './shaders/water-shader.js';
+    import { SandShader } from './shaders/caustics-shader.js';
+    import { WaterUniforms, SandUniforms, ForwardTime } from './shaders/uniforms.js';
+    import { trailGeometry, trailMaterial, trailPoints } from './vfx/particle-system.js';
 
     //create the scene
-    var scene = new THREE.Scene();
+    //var scene = new THREE.Scene();
     var ratio = window.innerWidth / window.innerHeight;
 
-    var camera = new THREE.PerspectiveCamera(45, ratio, 0.1, 1000);
-    camera.position.set(0, 0, 500);
-    camera.lookAt(0, 0, 1);
+    var camera = new THREE.PerspectiveCamera(45, ratio, 0.1, 3000);
+    camera.position.set(350, 50, 300);
+    var cameraXPos = 0;
+    var cameraYPos = 0;
+    var cameraZPos = 500;
+    camera.lookAt(0, 0, 0);
+    scene.add(camera)
 
-    // Import skybox image into program
-    new RGBELoader()
-      .load("./skybox/underwater.hdr", function (texture) {
-        texture.mapping = THREE.EquirectangularReflectionMapping;
-        scene.background = texture;
-        scene.environment = texture;
-      });
+    // // Import skybox image into program
+    // new RGBELoader()
+    //   .load("./skybox/underwater.hdr", function (texture) {
+    //     texture.mapping = THREE.EquirectangularReflectionMapping;
+    //     scene.background = texture;
+    //     scene.environment = texture;
+    //   });
+
+    scene.background = new THREE.Color(0x0000ff);
 
     var renderer = new THREE.WebGLRenderer();
 
@@ -109,24 +110,102 @@
 
     renderer.setSize(window.innerWidth, window.innerHeight);
     document.body.appendChild(renderer.domElement);
-
-    //shader material
-    const shaderMaterial = new THREE.ShaderMaterial({
-      fog: false,
-      wireframe: true, // For now, we'll stil use wireframe until we the textures on only one face
-      vertexShader: document.getElementById('vertexShader').textContent,
-      fragmentShader: document.getElementById('fragmentShader').textContent,
+    
+    // const waterShader = WaterShader;
+    // const waterUniforms = WaterUniforms;
+    
+    // Shader Material
+    const waterShaderMaterial = new THREE.ShaderMaterial({
+      uniforms: WaterUniforms,
+      fragmentShader: WaterShader.fragmentShader,
+      vertexShader: WaterShader.vertexShader,
+      //fog: true
+      transparent: true,
     });
 
+    const causticsMaterial = new THREE.ShaderMaterial({
+      uniforms: SandUniforms,
+      fragmentShader: SandShader.fragmentShader,
+      vertexShader: SandShader.vertexShader,
+      //fog: true,
+      transparent: true,
+    });
+
+    // Create Water Plane
+    const waterSurfaceGeometry = new THREE.PlaneGeometry(2400, 2400, 2400, 2400);
+    const waterSurfaceMesh = new THREE.Mesh(waterSurfaceGeometry, waterShaderMaterial);
+
+    waterSurfaceMesh.rotateX(90 * Math.PI / 180); // Flip it upside down
+    waterSurfaceMesh.position.y = BoidSettings.worldSize * 0.65;
+    scene.add(waterSurfaceMesh);
+
+    // Create Sand plane
+    const sandGeometry = new THREE.PlaneGeometry(2400, 2400);
+    const sandMaterial = new THREE.MeshPhongMaterial({ color: 0xaaaaaa });
+
+    var sand_texture = new THREE.TextureLoader().load("./assets/sand/Sand_001_COLOR.png");
+    sand_texture.wrapS = THREE.RepeatWrapping;
+    sand_texture.wrapT = THREE.RepeatWrapping;
+    sand_texture.repeat.set(24, 24);
+    
+    const surface = new THREE.Mesh(sandGeometry, sandMaterial);
+    surface.position.y = -BoidSettings.worldSize * 0.65;
+
+    var sand_texture = new THREE.TextureLoader().load("./assets/sand/Sand_001_COLOR.png");
+    sand_texture.repeat.set(24, 24);
+    sandMaterial.map = sand_texture;
+
+    var normal_map = new THREE.TextureLoader().load("./assets/sand/Sand_001_NRM.png");
+    sandMaterial.normalMap = normal_map;
+
+    const ao_map = new THREE.TextureLoader().load("/assets/sand/Sand_001_OCC.png");
+    sandMaterial.aoMap = ao_map;
+    sandMaterial.aoMapIntensity = 1;
+
+    normal_map.wrapS = normal_map.wrapT = THREE.RepeatingWrapping;
+    surface.rotation.x = -Math.PI / 2; // rotate the surface to be flat
+    scene.add(surface);
+
+    // Create Caustics plane
+    const causticsGeometry = new THREE.PlaneGeometry(2400, 2400);
+
+    const causticsMesh = new THREE.Mesh(causticsGeometry, causticsMaterial);
+    causticsMesh.position.y = -BoidSettings.worldSize * 0.65;
+    causticsMesh.rotation.x = -Math.PI / 2; // rotate the surface to be flat
+    scene.add(causticsMesh);
+
+    // Create fog
+    scene.fog = new THREE.Fog(0x0000FF, 1, 2000); //100 150 after other version fix
+    scene.fog.intensity = 0.1;
+
+    // Create rocks (nathan time)
+    
+    var numRocks = 500;
+  
+    
+    for(var i = 0; i < numRocks; i++)
+    {
+      var rockPos = new THREE.Vector3(getRandPos(), surface.position.y, getRandPos());
+      RockLoader.loadRock(scene, rockPos);
+    }
+
+    function getRandPos ()
+    {
+      var randNum = Math.floor(Math.random()*1000) + 1;
+      randNum *= Math.round(Math.random()) ? 1 : -1; 
+      return randNum;
+    }
+    
     // Create GUI
-    const gui = new GUI().title("Fish Controls");
+    //#region GUI
+    const gui = new GUI().title("Controls");
 
     var obj = {
       blueCohesion: 0.05,
       blueSeparation: 0.3,
       blueAlignment: 0.05,
       blueMovespeed: 0.8,
-      blueSeparationAwareness: 3,
+      blueSeparationAwareness: 4.2,
       blueAwareness: 25,
       resetBlueFish: function () { },
 
@@ -134,11 +213,18 @@
       redSeparation: 0.3,
       redAlignment: 0.05,
       redMovespeed: 0.8,
-      redSeparationAwareness: 3,
+      redSeparationAwareness: 4.2,
       redAwareness: 25,
       resetRedFish: function () { },
 
       resetAllFish: function () { },
+
+      sharkSpeedCap: 50,
+      sharkHorizontalTurnSpeedCap: 1,
+      sharkVerticalTurnSpeedCap: 2,
+      resetSharkSpeed: function () { },
+
+      cameraView: function () { }
     }
 
     const blueFishFolder = gui.addFolder("Blue Fish Settings");
@@ -252,46 +338,128 @@
       .onChange(value => {
         // Reset GUI sliders and property values to default
         obj.redCohesion = RedProperty.cohesion = 0.05,
-          obj.redSeparation = RedProperty.separation = 0.3,
-          obj.redAlignment = RedProperty.alignment = 0.05,
-          obj.redMovespeed = RedProperty.moveSpeed = 0.8,
-          obj.redSeparationAwareness = RedProperty.separationAwareness = 3,
-          obj.redAwareness = RedProperty.awareness = 25
+        obj.redSeparation = RedProperty.separation = 0.3,
+        obj.redAlignment = RedProperty.alignment = 0.05,
+        obj.redMovespeed = RedProperty.moveSpeed = 0.8,
+        obj.redSeparationAwareness = RedProperty.separationAwareness = 3,
+        obj.redAwareness = RedProperty.awareness = 25
       })
 
+    const sharkFolder = gui.addFolder("Shark Settings");
+
+    sharkFolder.add(obj, "sharkSpeedCap", 1, 100, 1)
+      .name("Shark Speed Cap")
+      .listen()
+      .onChange(value => {
+        speedCap = value
+        if (sharkSpeed > speedCap) {
+          sharkSpeed = speedCap
+        }
+      })
+    sharkFolder.add(obj, "sharkHorizontalTurnSpeedCap", 1, 5, 1)
+      .name("Shark Horizontal Turn Speed Cap")
+      .listen()
+      .onChange(value => {
+        horTurnCap = value
+        if (horTurnSpeed > horTurnCap) {
+          horTurnSpeed = horTurnCap
+        }
+      })
+    sharkFolder.add(obj, "sharkVerticalTurnSpeedCap", 1, 10, 1)
+      .name("Shark Vertical Turn Speed Cap")
+      .listen()
+      .onChange(value => {
+        verTurnCap = value
+        if (verTurnSpeed > verTurnCap) {
+          verTurnSpeed = verTurnCap
+        }
+      })
+    sharkFolder.add(obj, "resetSharkSpeed")
+      .name("Reset Shark")
+      .listen()
+      .onChange(value => {
+        obj.sharkSpeedCap = speedCap = 50;
+        if (sharkSpeed > speedCap) {
+          sharkSpeed = speedCap
+        }
+        obj.sharkHorizontalTurnSpeedCap = horTurnCap = 3;
+        if (horTurnSpeed > horTurnCap) {
+          horTurnSpeed = horTurnCap
+        }
+        obj.sharkVerticalTurnSpeedCap = verTurnCap = 3;
+        if (verTurnSpeed > verTurnCap) {
+          verTurnSpeed = verTurnCap
+        }
+
+        // MIGHT NEED TO FIGURE OUT ANOTHER WAY TO HAVE CLICKING OF GUI NOT UNFOCUS FROM MAIN SCREEN
+        // AS IT THINKS BUTTON IS CONTINUOUSLY HELD 
+        //document.body.focus();
+
+        moveForward = false
+        moveBackward = false
+        rotateLeft = false
+        rotateRight = false
+        rotateUp = false
+        rotateDown = false
+      })
+
+    const cameraFolder = gui.addFolder("Camera View");
+
+    obj.cameraView = "Orbit Controls";
+    var lastCameraViewWasOrbit = true;
+
+    cameraFolder.add(obj, "cameraView", ["Orbit Controls", "Shark 1st Person", "Shark 3rd Person"])
+      .name("Camera Settings")
+      .listen()
+      .onChange(value => {
+        // Store last camera position if last camera view was orbit controls
+        if (lastCameraViewWasOrbit) {
+            cameraXPos = camera.position.x;
+            cameraYPos = camera.position.y;
+            cameraZPos = camera.position.z;
+            lastCameraViewWasOrbit = false
+          }
+        if (obj.cameraView == "Orbit Controls") {
+          camera.position.x = cameraXPos;
+          camera.position.y = cameraYPos;
+          camera.position.z = cameraZPos;
+          lastCameraViewWasOrbit = true;
+          controls.enabled = true;
+          sharkMesh.remove(camera);
+          controls.update();
+        }
+        if (obj.cameraView == "Shark 1st Person") {
+          controls.enabled = false;
+          controls.reset();
+          camera.position.set(10, 0, 0);
+          // Adjust the rotation to face the nose of the shark
+          camera.rotation.set(0, -Math.PI / 2, 0);
+          sharkMesh.add(camera);
+        }
+        if (obj.cameraView == "Shark 3rd Person") {
+          controls.enabled = false;
+          controls.reset();
+          camera.position.set(-20, 5, 0);
+          // Adjust the rotation to face the nose of the shark
+          camera.rotation.set(0, -Math.PI / 2, 0);
+          sharkMesh.add(camera);
+        }
+      });
+
+      //#endregion
+    
     //create box wireframe Geometry and add to scene to visualise the world area
-    const boundsGeometry = new THREE.BoxGeometry(BoidSettings.worldSize, BoidSettings.worldSize, BoidSettings.worldSize);
+    // const boundsGeometry = new THREE.BoxGeometry(BoidSettings.worldSize * 2, BoidSettings.worldSize, BoidSettings.worldSize * 2);
     // var boxMat = new THREE.MeshBasicMaterial();
     // boxMat.color = new THREE.Color(0, 0.8, 1);
-    //boxMat.wireframe = true;
-    const boxMesh = new THREE.Mesh(boundsGeometry, shaderMaterial)
-    boxMesh.position.set(0, 0, 0);
-    scene.add(boxMesh);
-
-    var boids = []; //list of all active boids in the simulation
-    //boids octree, used for spacial partitioning and boid-neighbour comparison optimisation
-    const octree = new Octree(
-      new Box(
-        -BoidSettings.worldSize * 0.5, -BoidSettings.worldSize * 0.5, -BoidSettings.worldSize * 0.5,
-        BoidSettings.worldSize * 0.5, BoidSettings.worldSize * 0.5, BoidSettings.worldSize * 0.5),
-      10);
+    // boxMat.wireframe = true;
+    // const boxMesh = new THREE.Mesh(boundsGeometry, boxMat)
+    // boxMesh.position.set(0, 0, 0);
+    // scene.add(boxMesh);
 
     //creates 2000 normal 'blue' boids
     for (let i = 0; i < 2000; i++) {
       let boid = new Boid(BlueProperty); // object containing blue fish values
-      /*=======
-          for (let i = 0; i < 1700; i++) {
-            let boid = new Boid(
-              0, //id
-              0.02, //cohesian amount 0 - 1
-              0.15, //separation amount 0 - 1
-              0.02, //alignment amount 0 - 1
-              0.8, //movespeed
-              3, //separation awareness
-              25, //awareness
-              new THREE.Color(0, 1, 1), //boid color
-            );
-      >>>>>> dev*/
       boid.createBoid(scene); //render the boid
       boids.push(boid); //add the boid to the list
       octree.insert(boid); //add the boid to the octree
@@ -313,6 +481,7 @@
     const ambientLight = new THREE.AmbientLight(0x113144, 1);
     scene.add(ambientLight);
 
+    //#region Shark controls
     //add shark (done by Nathan)
 
     //shark texture
@@ -363,6 +532,7 @@
 
       //adds the shark mesh to scene
       scene.add(sharkMesh);
+      //sharkMesh.add(camera);
     }).catch();
 
     //this.boidMesh = mesh;
@@ -372,8 +542,14 @@
 
     //shark controls (done by nathan)
 
-    //shark speed
-    var sharkSpeed = 20;
+    //shark speeds
+    var sharkSpeed = 0;
+    var horTurnSpeed = 0;
+    var verTurnSpeed = 0;
+    //speed caps
+    var speedCap = 50;
+    var horTurnCap = 1;
+    var verTurnCap = 2;
     //Clock to give time variables
     var Clock = new THREE.Clock();
 
@@ -392,8 +568,8 @@
         case 75: moveBackward = true; break; //'K'
         case 65: rotateLeft = true; break; //'A'
         case 68: rotateRight = true; break; //'D'
-        case 87: rotateUp = true; break; //'W'
-        case 83: rotateDown = true; break; //'S'
+        case 83: rotateUp = true; break; //'W'
+        case 87: rotateDown = true; break; //'S'
       }
     }
 
@@ -404,15 +580,36 @@
         case 75: moveBackward = false; break;
         case 65: rotateLeft = false; break;
         case 68: rotateRight = false; break;
-        case 87: rotateUp = false; break;
-        case 83: rotateDown = false; break;
+        case 83: rotateUp = false; break;
+        case 87: rotateDown = false; break;
       }
     }
+//#endregion
 
-    const boxSize = 50; //range for the octree to search for boids
+    // Trail Effect for Shark (Michael)
+
+    function updateTrail() {
+      trailPoints.push(sharkMesh.position.clone());
+
+      // Remove the oldest point if the trail becomes too long
+      if (trailPoints.length > 50) {
+        trailPoints.shift();
+      }
+
+      // Update the trail geometry
+      trailGeometry.setFromPoints(trailPoints);
+    }
+
+    const trail = new THREE.Line(trailGeometry, trailMaterial);
+    // const trail = new THREE.Mesh(trailGeometry, trailMaterial);
+    scene.add(trail);
+    // NOTE: Variables are contained in vfx/particle-system.js
+
+    const boxSize = 40; //range for the octree to search for boids
     var Update = function () {
       renderer.render(scene, camera);
-      controls.update();
+
+   //   controls.update();
       //ye olde reliable deltatime
       var delta = Clock.getDelta();
 
@@ -420,50 +617,115 @@
       for (let i = 0; i < boids.length; i++) {
         //create new search area for the octree
         let search = new Box(
-          boids[i].position.x - boxSize,
-          boids[i].position.y - boxSize,
-          boids[i].position.z - boxSize,
-          boxSize * 2,
-          boxSize * 2,
-          boxSize * 2,
+          boids[i].position.x - (boxSize * 0.5),
+          boids[i].position.y - (boxSize * 0.5),
+          boids[i].position.z - (boxSize * 0.5),
+          boxSize,
+          boxSize,
+          boxSize,
         );
         let q = octree.query(search); //create a new list of boids within this one's box
+        if (boids[i].isDed) continue;
         boids[i].flock(q); //run algorithm on this boid using its surroundings boids
-        boids[i].update(); //update this boid's position
-        // console.log(boids[i].valueReference.movespeed);
-        // console.log(boids[i].id);
-        // console.log(boids[i].color);
-        // console.log(boids[i].valueReference.cohesion);
-
+        boids[i].update(q); //update this boid's position
       }
 
       //if the shark's model has been loaded, do movement things 
       if (sharkMesh != null) {
         if (moveForward) {
+          //increase the speed of the shark if it hasn't reached the cap
+          if(sharkSpeed <= speedCap)
+            sharkSpeed++;
+            //fractionSpeedReduction = sharkSpeed / 10;
           //move forward based on the shark's local x axis
           sharkMesh.translateX(sharkSpeed * delta);
         }
-        if (moveBackward) {
+        else if (moveBackward) {
+          //decrease the speed of the shark if it hasn't reached the cap
+          if(sharkSpeed >= -speedCap)
+            sharkSpeed--;
+            //fractionSpeedReduction = sharkSpeed / 10;
           //move backward based on the shark's local x axis
-          sharkMesh.translateX(-sharkSpeed * delta);
+          sharkMesh.translateX(sharkSpeed * delta);
+        }
+        else if (!moveForward || !moveBackward && sharkSpeed != 0)
+        {
+          if(sharkSpeed < 0)
+          {
+            sharkSpeed++;
+            //sharkSpeed += fractionSpeedReduction;
+            sharkMesh.translateX(sharkSpeed * delta);
+          }
+          else if(sharkSpeed > 0)
+          {
+            sharkSpeed--;
+            //sharkSpeed -= fractionSpeedReduction;
+            sharkMesh.translateX(sharkSpeed * delta);
+          }
         }
         if (rotateLeft) {
+          if(horTurnSpeed <= horTurnCap)
+            horTurnSpeed++;
           //turn left
-          sharkMesh.rotation.y += Math.PI / 2 * delta;
+          sharkMesh.rotation.y += horTurnSpeed * delta;
         }
-        if (rotateRight) {
+        else if (rotateRight) {
+          if(horTurnSpeed >= -horTurnCap)
+            horTurnSpeed--;
           //turn right
-          sharkMesh.rotation.y -= Math.PI / 2 * delta;
+          sharkMesh.rotation.y += horTurnSpeed * delta;
+        }
+        else if (!rotateLeft || !rotateRight && horTurnSpeed != 0)
+        {
+          if(horTurnSpeed < 0)
+          {
+            horTurnSpeed++;
+            sharkMesh.rotation.y += horTurnSpeed * delta;
+          }
+          else if(horTurnSpeed > 0)
+          {
+            horTurnSpeed--;
+            sharkMesh.rotation.y += horTurnSpeed * delta;
+          }
         }
         if (rotateUp) {
+          if(verTurnSpeed < verTurnCap)
+            verTurnSpeed++;
           //turn upwards
-          sharkMesh.rotation.z += Math.PI / 2 * delta;
+          if (sharkMesh.rotation.z <= Math.PI/2.15)
+            sharkMesh.rotation.z += verTurnSpeed * delta;
+          else
+            verTurnSpeed = 0;
         }
-        if (rotateDown) {
+        else if (rotateDown) {
+          if(verTurnSpeed > -verTurnCap)
+            verTurnSpeed--;
           //turn downwards
-          sharkMesh.rotation.z -= Math.PI / 2 * delta;
+          if (sharkMesh.rotation.z >= -Math.PI/2.15)
+            sharkMesh.rotation.z += verTurnSpeed * delta;
+          else
+            verTurnSpeed = 0;
         }
+        else if (!rotateUp || !rotateDown && verTurnSpeed != 0)
+        {
+          if(verTurnSpeed < 0)
+          {
+            verTurnSpeed++;
+            sharkMesh.rotation.z += verTurnSpeed * delta;
+          }
+          else if(verTurnSpeed > 0)
+          {
+            verTurnSpeed--;
+            sharkMesh.rotation.z += verTurnSpeed * delta;
+          }
+        }
+        
       }
+
+      ForwardTime(); // Time Update
+      updateTrail(); // Trail Update
+
+      sharkMesh.updateMatrix();
 
       requestAnimationFrame(Update);
     };

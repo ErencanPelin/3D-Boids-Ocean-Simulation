@@ -7,5 +7,7 @@ Contributors: [Stephen](https://github.com/stephenrobxrts), [Nathan](https://git
 - customisable behaviour via GUI sliders
 - limited worldsize 
 - avoids edges of the world
-- boids avoid boids which are higher up on the 'food chain' than them
+- boids avoid boids which are higher up on the 'food chain' than them, food chain is determined by each boid's ID value.
 - boids follow boids which are lower on the 'food chain' than them
+- boids will eat and kill boids which are lower in the food chain
+- boids will reproduce with nearby boids and create copies of themselves. Each boid can only reproduce once. There is a cap on the number of fish that can be made
