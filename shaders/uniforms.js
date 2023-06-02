@@ -29,10 +29,6 @@ export const WaterUniforms = {
     scroll_speed: { value: 0.1 },
     wave_height: { value: 20.0 },
     intensity: { value: 2.25 }, // Intensity (lighting)
-
-    fogColor: { value: new THREE.Vector4(0.0, 0.0, 1.0, 1.0) },
-    fogNear: { value: 150 }, // These are flipped because the fog was inverted
-    fogFar: { value: 100 },
 }
 
 export const SandUniforms = {
@@ -45,10 +41,6 @@ export const SandUniforms = {
     scroll_speed: { value: 0.1 },
     sand_height: { value: 1.1 },
     intensity: { value: 1.25 }, // Intensity (lighting)
-
-    fogColor: { value: new THREE.Vector4(0.0, 0.0, 1.0, 1.0) },
-    fogNear: { value: 150 }, 
-    fogFar: { value: 100 },
 }
 
 export function ForwardTime() {
