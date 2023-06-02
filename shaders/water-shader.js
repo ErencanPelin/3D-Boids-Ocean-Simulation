@@ -23,7 +23,7 @@ export const WaterShader = {
             #include <fog_vertex>
 
             vTextureCoord = uv;
-            vTextureCoord *= 1.5; // Controls the scale of the entire texture. Default: 1
+            vTextureCoord *= 0.8; // Controls the scale of the entire texture. Default: 1
 
             // Displaces the vertices based on the noise texture
             vec4 noiseNormal_texture = generateScrollingNoise(scroll_speed / 2.0, noiseNormal);
