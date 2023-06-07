@@ -86,7 +86,7 @@
     camera.position.set(350, 50, 300);
     var cameraXPos = 0;
     var cameraYPos = 0;
-    var cameraZPos = 500;
+    var cameraZPos = 0;
     camera.lookAt(0, 0, 0);
     scene.add(camera)
 
@@ -222,6 +222,8 @@
       sharkHorizontalTurnSpeedCap: 1,
       sharkVerticalTurnSpeedCap: 2,
       resetSharkSpeed: function () { },
+
+      viewBox: false,
 
       cameraView: function () { }
     }
@@ -402,6 +404,15 @@
         rotateDown = false
       })
 
+    const boxFolder = gui.addFolder("Box Settings");
+
+    boxFolder.add(obj, "viewBox")
+      .name("View Bounding Box")
+      .listen()
+      .onChange(value => {
+        boxMesh.visible = value;
+      }); 
+
     const cameraFolder = gui.addFolder("Camera View");
 
     obj.cameraView = "Orbit Controls";
@@ -416,6 +427,7 @@
             cameraXPos = camera.position.x;
             cameraYPos = camera.position.y;
             cameraZPos = camera.position.z;
+            // store rotation too ?
             lastCameraViewWasOrbit = false
           }
         if (obj.cameraView == "Orbit Controls") {
@@ -448,13 +460,14 @@
       //#endregion
     
     //create box wireframe Geometry and add to scene to visualise the world area
-    // const boundsGeometry = new THREE.BoxGeometry(BoidSettings.worldSize * 2, BoidSettings.worldSize, BoidSettings.worldSize * 2);
-    // var boxMat = new THREE.MeshBasicMaterial();
-    // boxMat.color = new THREE.Color(0, 0.8, 1);
-    // boxMat.wireframe = true;
-    // const boxMesh = new THREE.Mesh(boundsGeometry, boxMat)
-    // boxMesh.position.set(0, 0, 0);
-    // scene.add(boxMesh);
+    const boundsGeometry = new THREE.BoxGeometry(BoidSettings.worldSize * 2, BoidSettings.worldSize, BoidSettings.worldSize * 2);
+    var boxMat = new THREE.MeshBasicMaterial();
+    boxMat.color = new THREE.Color(0, 0.8, 1);
+    boxMat.wireframe = true;
+    const boxMesh = new THREE.Mesh(boundsGeometry, boxMat)
+    boxMesh.position.set(0, 0, 0);
+    boxMesh.visible = false;
+    scene.add(boxMesh);
 
     //creates 2000 normal 'blue' boids
     for (let i = 0; i < 2000; i++) {
