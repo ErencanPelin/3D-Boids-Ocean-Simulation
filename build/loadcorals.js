@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { PLYLoader } from './loaders/PLYLoader.js';
+import { GLTFLoader } from './loaders/GLTFLoader.js';
 
 export function loadcoral(scene, pos) {
     
@@ -10,6 +11,17 @@ export function loadcoral(scene, pos) {
     coralMaterial1.map = coralTexture1;
 
     coralLoad1(scene, pos, coralMesh, coralMaterial1);
+    
+}
+
+export function loadrarecoral(scene, pos) {
+    
+    var rareCoralType = randLoad();
+
+    if(rareCoralType == 1)
+        coralLoad2(scene, pos);
+    else if(rareCoralType == 2)
+        coralLoad3(scene, pos);
 }
 
 async function coralLoad1(scene, pos, coralMesh, coralMaterial)
@@ -53,6 +65,43 @@ async function coralLoad1(scene, pos, coralMesh, coralMaterial)
           scene.add(coralMesh);
           //console.log("coral loaded :D");
         }).catch();
+}
+
+async function coralLoad2(scene, pos)
+{
+    var coralloader = new GLTFLoader();
+    var loadPromise = coralloader.loadAsync('../models/low_poly_red_coral/scene.gltf');
+        await loadPromise.then(function (gltf) {
+            
+            gltf.scene.position.set(pos.x, (pos.y -6), pos.z);
+            gltf.scene.rotation.y += randDir();
+            gltf.scene.scale.set(3,3,3);
+
+            scene.add(gltf.scene);
+            //console.log("coral loaded :D");
+
+        }).catch();
+}
+
+async function coralLoad3(scene, pos)
+{
+    var coralloader = new GLTFLoader();
+    var loadPromise = coralloader.loadAsync('../models/blue_lowpoly_coral/scene.gltf');
+        await loadPromise.then(function (gltf) {
+            
+            gltf.scene.position.set(pos.x, pos.y, pos.z);
+            gltf.scene.rotation.y += randDir();
+            gltf.scene.scale.set(5,5,5);
+
+            scene.add(gltf.scene);
+
+        }).catch();
+}
+
+function randLoad ()
+{
+    var randNum = Math.floor(Math.random()*2) + 1;
+    return randNum;
 }
 
 function randModifier ()

@@ -198,12 +198,26 @@
 
     // Create Corals
     
-    var numCorals = 200;
+    var numCorals = 150;
+    var numrareCorals = 50;
 
-    for(var i = 0; i < numRocks; i++)
+    for(var i = 0; i < numCorals; i++)
     {
       var coralPos = new THREE.Vector3(getRandPos(), surface.position.y, getRandPos());
       CoralLoader.loadcoral(scene, coralPos);
+    }
+
+    for(var i = 0; i < numrareCorals; i++)
+    {
+      var rareCoralPos = new THREE.Vector3(getRareCoralRandPos(), surface.position.y, getRareCoralRandPos());
+      CoralLoader.loadrarecoral(scene, rareCoralPos);
+    }
+
+    function getRareCoralRandPos ()
+    {
+      var randNum = Math.floor(Math.random()*500) + 1;
+      randNum *= Math.round(Math.random()) ? 1 : -1; 
+      return randNum;
     }
     
     // Create GUI
