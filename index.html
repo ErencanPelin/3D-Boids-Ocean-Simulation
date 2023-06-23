@@ -65,6 +65,7 @@
   <script type="module">
     import * as THREE from 'three';
     import * as RockLoader from './build/loadrocks.js';
+    import * as CoralLoader from './build/loadcorals.js';
     import { scene, MainProperties, octree, boids } from './build/main.js';
     import { Boid } from './build/boids/boid.js';
     import { Box } from './build/octree/box.js';
@@ -181,7 +182,6 @@
     // Create rocks (nathan time)
     
     var numRocks = 500;
-  
     
     for(var i = 0; i < numRocks; i++)
     {
@@ -194,6 +194,16 @@
       var randNum = Math.floor(Math.random()*1000) + 1;
       randNum *= Math.round(Math.random()) ? 1 : -1; 
       return randNum;
+    }
+
+    // Create Corals
+    
+    var numCorals = 200;
+
+    for(var i = 0; i < numRocks; i++)
+    {
+      var coralPos = new THREE.Vector3(getRandPos(), surface.position.y, getRandPos());
+      CoralLoader.loadcoral(scene, coralPos);
     }
     
     // Create GUI
