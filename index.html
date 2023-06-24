@@ -65,6 +65,8 @@
   <script type="module">
     import * as THREE from 'three';
     import * as RockLoader from './build/loadrocks.js';
+    import * as CoralLoader from './build/loadcorals.js';
+    import * as MiscLoader from './build/loadmisc.js';
     import { scene, MainProperties, octree, boids } from './build/main.js';
     import { Boid } from './build/boids/boid.js';
     import { Box } from './build/octree/box.js';
@@ -178,10 +180,13 @@
     scene.fog = new THREE.Fog(0x0000FF, 1, 2000); //100 150 after other version fix
     scene.fog.intensity = 0.1;
 
+    // Create ship
+
+    MiscLoader.loadship(scene, new THREE.Vector3(0, surface.position.y, 0));
+
     // Create rocks (nathan time)
     
     var numRocks = 500;
-  
     
     for(var i = 0; i < numRocks; i++)
     {
@@ -194,6 +199,40 @@
       var randNum = Math.floor(Math.random()*1000) + 1;
       randNum *= Math.round(Math.random()) ? 1 : -1; 
       return randNum;
+    }
+
+    // Create Corals
+    
+    var numCorals = 500;
+    var numrareCorals = 5;
+
+    for(var i = 0; i < numCorals; i++)
+    {
+      var coralPos = new THREE.Vector3(getRandPos(), surface.position.y, getRandPos());
+      CoralLoader.loadcoral(scene, coralPos);
+    }
+
+    for(var i = 0; i < numrareCorals; i++)
+    {
+      var rareCoralPos = new THREE.Vector3(getRareCoralRandPos(), surface.position.y, getRareCoralRandPos());
+      CoralLoader.loadrarecoral(scene, rareCoralPos);
+    }
+
+    function getRareCoralRandPos ()
+    {
+      var randNum = Math.floor(Math.random()*500) + 1;
+      randNum *= Math.round(Math.random()) ? 1 : -1; 
+      return randNum;
+    }
+
+    // Create Seaweed
+
+    var numSeaweeds = 100;
+
+    for(var i = 0; i < numSeaweeds; i++)
+    {
+      var seaweedPos = new THREE.Vector3(getRandPos(), surface.position.y, getRandPos());
+      MiscLoader.loadseaweed(scene, seaweedPos);
     }
     
     // Create GUI
