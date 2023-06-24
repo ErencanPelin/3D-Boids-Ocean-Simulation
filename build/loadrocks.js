@@ -34,7 +34,7 @@ async function rock1(scene, pos, rockMesh, rockMaterial)
     var rockloader1 = new PLYLoader();
     var loadPromise = rockloader1.loadAsync('../models/rock.ply');
         await loadPromise.then(function (geometry) {
-          //compute bounding box of shark geometry
+          //compute bounding box of rock geometry
           geometry.computeBoundingBox();
     
           //variables to resize and recenter mesh position
@@ -66,7 +66,7 @@ async function rock1(scene, pos, rockMesh, rockMaterial)
           rockMesh.rotation.x = -Math.PI/2;
           rockMesh.rotation.z += randDir();
     
-          //adds the shark mesh to scene
+          //adds the rock mesh to scene
           scene.add(rockMesh);
         }).catch();
 }
@@ -75,7 +75,7 @@ async function rock2(scene, pos, rockMesh, rockMaterial)
     var rockloader2 = new PLYLoader();
     var loadPromise = rockloader2.loadAsync('../models/rock2.ply');
         await loadPromise.then(function (geometry) {
-          //compute bounding box of shark geometry
+          //compute bounding box of rock geometry
           geometry.computeBoundingBox();
     
           //variables to resize and recenter mesh position
@@ -107,7 +107,7 @@ async function rock2(scene, pos, rockMesh, rockMaterial)
           rockMesh.rotation.x = -Math.PI/2;
           rockMesh.rotation.z += randDir();
     
-          //adds the shark mesh to scene
+          //adds the rock mesh to scene
           scene.add(rockMesh);
         }).catch();
 }
@@ -117,7 +117,7 @@ async function rock3(scene, pos, rockMesh, pebbleMaterial)
     var rockloader3 = new PLYLoader();
     var loadPromise = rockloader3.loadAsync('../models/pebble.ply');
         await loadPromise.then(function (geometry) {
-          //compute bounding box of shark geometry
+          //compute bounding box of rock geometry
           geometry.computeBoundingBox();
     
           //variables to resize and recenter mesh position
@@ -149,7 +149,7 @@ async function rock3(scene, pos, rockMesh, pebbleMaterial)
           rockMesh.rotation.x = -Math.PI/2;
           rockMesh.rotation.z += randDir();
     
-          //adds the shark mesh to scene
+          //adds the rock mesh to scene
           scene.add(rockMesh);
         }).catch();
 }

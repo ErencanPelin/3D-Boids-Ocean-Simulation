@@ -6,6 +6,10 @@ export function loadseaweed(scene, pos) {
     seaweedload(scene, pos, mixer);
 }
 
+export function loadship(scene, pos) {
+    shipload(scene, pos);
+}
+
 async function seaweedload(scene, pos, mixer)
 {
     var coralloader = new GLTFLoader();
@@ -40,6 +44,21 @@ async function seaweedload(scene, pos, mixer)
             requestAnimationFrame(update);
 
         }).catch();
+}
+
+async function shipload(scene, pos)
+{
+    var coralloader = new GLTFLoader();
+    var loadPromise = coralloader.loadAsync('../models/sunkenboat/sketch.gltf');
+    await loadPromise.then(function (gltf) {
+            
+        gltf.scene.position.set(pos.x, pos.y, pos.z);
+        gltf.scene.rotation.y += randDir();
+        gltf.scene.scale.set(50,50,50);
+
+        scene.add(gltf.scene);
+
+    }).catch();
 }
 
 function randModifier ()

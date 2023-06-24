@@ -180,6 +180,10 @@
     scene.fog = new THREE.Fog(0x0000FF, 1, 2000); //100 150 after other version fix
     scene.fog.intensity = 0.1;
 
+    // Create ship
+
+    MiscLoader.loadship(scene, new THREE.Vector3(0, surface.position.y, 0));
+
     // Create rocks (nathan time)
     
     var numRocks = 500;
