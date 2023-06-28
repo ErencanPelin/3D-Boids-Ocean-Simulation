@@ -73,7 +73,6 @@
     import { BoidSettings } from './build/boids/boidSettings.js';
     import { BlueProperty } from './build/boids/boidSettings.js';
     import { RedProperty } from './build/boids/boidSettings.js';
-    import { RGBELoader } from "./build/loaders/RGBELoader.js";
     import { OrbitControls } from './build/controls/OrbitControls.js';
     import { PLYLoader } from './build/loaders/PLYLoader.js';
     import { WaterShader } from './shaders/water-shader.js';
@@ -89,7 +88,7 @@
     camera.position.set(350, 50, 300);
     var cameraXPos = 0;
     var cameraYPos = 0;
-    var cameraZPos = 500;
+    var cameraZPos = 0;
     camera.lookAt(0, 0, 0);
     scene.add(camera)
 
@@ -121,7 +120,7 @@
       uniforms: WaterUniforms,
       fragmentShader: WaterShader.fragmentShader,
       vertexShader: WaterShader.vertexShader,
-      //fog: true
+      //fog: true,
       transparent: true,
     });
 
@@ -177,7 +176,7 @@
     scene.add(causticsMesh);
 
     // Create fog
-    scene.fog = new THREE.Fog(0x0000FF, 1, 2000); //100 150 after other version fix
+    scene.fog = new THREE.Fog(0x0000FF, 1, 1400); //100 150 after other version fix
     scene.fog.intensity = 0.1;
 
     // Create ship
@@ -262,6 +261,8 @@
       sharkHorizontalTurnSpeedCap: 1,
       sharkVerticalTurnSpeedCap: 2,
       resetSharkSpeed: function () { },
+
+      viewBox: false,
 
       cameraView: function () { }
     }
@@ -421,11 +422,11 @@
         if (sharkSpeed > speedCap) {
           sharkSpeed = speedCap
         }
-        obj.sharkHorizontalTurnSpeedCap = horTurnCap = 3;
+        obj.sharkHorizontalTurnSpeedCap = horTurnCap = 1;
         if (horTurnSpeed > horTurnCap) {
           horTurnSpeed = horTurnCap
         }
-        obj.sharkVerticalTurnSpeedCap = verTurnCap = 3;
+        obj.sharkVerticalTurnSpeedCap = verTurnCap = 2;
         if (verTurnSpeed > verTurnCap) {
           verTurnSpeed = verTurnCap
         }
@@ -442,6 +443,15 @@
         rotateDown = false
       })
 
+    const boxFolder = gui.addFolder("Box Settings");
+
+    boxFolder.add(obj, "viewBox")
+      .name("View Bounding Box")
+      .listen()
+      .onChange(value => {
+        boxMesh.visible = value;
+      }); 
+
     const cameraFolder = gui.addFolder("Camera View");
 
     obj.cameraView = "Orbit Controls";
@@ -456,6 +466,7 @@
             cameraXPos = camera.position.x;
             cameraYPos = camera.position.y;
             cameraZPos = camera.position.z;
+            // store rotation too ?
             lastCameraViewWasOrbit = false
           }
         if (obj.cameraView == "Orbit Controls") {
@@ -470,7 +481,8 @@
         if (obj.cameraView == "Shark 1st Person") {
           controls.enabled = false;
           controls.reset();
-          camera.position.set(10, 0, 0);
+          camera.position.set(2.5, 0, 0);
+          //camera.position.set(sharkMesh.position.x + 10, sharkMesh.position.y, sharkMesh.position.z);
           // Adjust the rotation to face the nose of the shark
           camera.rotation.set(0, -Math.PI / 2, 0);
           sharkMesh.add(camera);
@@ -479,6 +491,7 @@
           controls.enabled = false;
           controls.reset();
           camera.position.set(-20, 5, 0);
+          //camera.position.set(sharkMesh.position.x - 20, sharkMesh.position.y + 5, sharkMesh.position.z);
           // Adjust the rotation to face the nose of the shark
           camera.rotation.set(0, -Math.PI / 2, 0);
           sharkMesh.add(camera);
@@ -488,13 +501,14 @@
       //#endregion
     
     //create box wireframe Geometry and add to scene to visualise the world area
-    // const boundsGeometry = new THREE.BoxGeometry(BoidSettings.worldSize * 2, BoidSettings.worldSize, BoidSettings.worldSize * 2);
-    // var boxMat = new THREE.MeshBasicMaterial();
-    // boxMat.color = new THREE.Color(0, 0.8, 1);
-    // boxMat.wireframe = true;
-    // const boxMesh = new THREE.Mesh(boundsGeometry, boxMat)
-    // boxMesh.position.set(0, 0, 0);
-    // scene.add(boxMesh);
+    const boundsGeometry = new THREE.BoxGeometry(BoidSettings.worldSize * 2, BoidSettings.worldSize, BoidSettings.worldSize * 2);
+    var boxMat = new THREE.MeshBasicMaterial();
+    boxMat.color = new THREE.Color(0, 0.8, 1);
+    boxMat.wireframe = true;
+    const boxMesh = new THREE.Mesh(boundsGeometry, boxMat)
+    boxMesh.position.set(0, 0, 0);
+    boxMesh.visible = false;
+    scene.add(boxMesh);
 
     //creates 2000 normal 'blue' boids
     for (let i = 0; i < 2000; i++) {
@@ -631,7 +645,7 @@
       trailPoints.push(sharkMesh.position.clone());
 
       // Remove the oldest point if the trail becomes too long
-      if (trailPoints.length > 50) {
+      if (trailPoints.length > 25) {
         trailPoints.shift();
       }
 
@@ -765,6 +779,24 @@
       updateTrail(); // Trail Update
 
       sharkMesh.updateMatrix();
+
+      // if (obj.cameraView == "Shark 1st Person") {
+      //   camera.position.x = sharkMesh.position.x + 10
+      //   camera.position.y = sharkMesh.position.y
+      //   camera.position.z = sharkMesh.position.z
+      // }
+
+      // if (obj.cameraView == "Shark 3rd Person") {
+      //   camera.position.x = sharkMesh.position.x - 20
+      //   camera.position.y = sharkMesh.position.y + 5
+      //   camera.position.z = sharkMesh.position.z
+      // }
+
+      // if (obj.cameraView != "Orbit Controls") {
+      //   camera.rotation.x = sharkMesh.rotation.x
+      //   camera.rotation.y = -Math.PI / 2
+      //   camera.rotation.z = sharkMesh.rotation.z
+      // }
 
       requestAnimationFrame(Update);
     };
