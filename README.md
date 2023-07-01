@@ -11,3 +11,11 @@ Contributors: [Stephen](https://github.com/stephenrobxrts), [Nathan](https://git
 - boids follow boids which are lower on the 'food chain' than them
 - boids will eat and kill boids which are lower in the food chain
 - boids will reproduce with nearby boids and create copies of themselves. Each boid can only reproduce once. There is a cap on the number of fish that can be made
+
+## Project Dependencies
+[@types/dat.gui](https://registry.npmjs.org/@types/dat.gui/-/dat.gui-0.7.7.tgz): "0.7.7"
+[lodash](https://registry.npmjs.org/lodash/-/lodash-4.17.21.tgz): "4.17.21"
+[potpack](https://registry.npmjs.org/potpack/-/potpack-1.0.2.tgz): "1.0.2"
+[three](https://registry.npmjs.org/three/-/three-0.153.0.tgz): "0.153.0",
+[three-nebula](https://registry.npmjs.org/three-nebula/-/three-nebula-10.0.3.tgz): "10.0.3",
+[uuid](https://registry.npmjs.org/uuid/-/uuid-3.4.0.tgz): "3.4.0"
